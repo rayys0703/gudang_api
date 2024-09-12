@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\JenisBarangController;
 use App\Http\Controllers\Api\StatusBarangController;
 use App\Http\Controllers\Api\BarangController;
 use App\Http\Controllers\Api\BarangMasukController;
+use App\Http\Controllers\Api\KeperluanController;
 
 /* Autentikasi */
 Route::post('register', [AuthController::class, 'register']);
@@ -65,6 +66,14 @@ Route::middleware('auth:api')->group(function () {
     Route::put('/barangmasuk/{id}', [BarangMasukController::class, 'update']);
     Route::delete('/barangmasuk/{id}', [BarangMasukController::class, 'delete']);
     Route::post('/barangmasuk/delete-selected', [BarangMasukController::class, 'deleteSelected']);
+    Route::get('/barangmasuk/{id}', [BarangMasukController::class, 'show']);
+
+    Route::get('/keperluan', [KeperluanController::class, 'index']);
+    Route::post('/keperluan', [KeperluanController::class, 'store']);
+    Route::get('/keperluan/{id}', [KeperluanController::class, 'edit']);
+    Route::put('/keperluan/{id}', [KeperluanController::class, 'update']);
+    Route::delete('/keperluan/{id}', [KeperluanController::class, 'delete']);
+    Route::post('/keperluan/delete-selected', [KeperluanController::class, 'deleteSelected']);
 });
 
 

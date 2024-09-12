@@ -29,31 +29,49 @@ class BarangMasukController extends Controller
 			->select('barang.*', 'barang_masuk.id as barang_masuk_id', 'barang.nama as nama_barang', 'barang.keterangan as keterangan_barang', DB::raw("DATE_FORMAT(barang_masuk.tanggal, '%W, %e %M %Y') as tanggal_barang"), 'jenis_barang.nama as nama_jenis_barang', 'supplier.nama as nama_supplier', 'barang_masuk.jumlah as jumlah')
 			->groupBy('barang.id', 'barang_masuk.id', 'nama_barang', 'barang.jenis_barang_id', 'barang.supplier_id', 'keterangan_barang', 'tanggal_barang', 'barang.created_at', 'barang.updated_at', 'jenis_barang.nama', 'supplier.nama', 'barang_masuk.jumlah')
 			->havingRaw('barang_masuk.jumlah > 0')
-			->orderBy('jumlah', 'desc');
+			->orderBy('barang_masuk.tanggal', 'desc');
 
 		if ($search) {
 			$query->where('barang.nama', 'like', "%{$search}%")
-			->orWhere('jenis_barang.nama', 'like', "%{$search}%")
 			->orWhere(DB::raw("DATE_FORMAT(barang_masuk.tanggal, '%W, %e %M %Y')"), 'like', "%{$search}%")
 			->orWhere('supplier.nama', 'like', "%{$search}%");
+
+			$query->where(function($q) use ($search) {
+				$q->where('barang.nama', 'like', "%{$search}%")
+					->orWhere('barang.keterangan', 'like', "%{$search}%");
+					// ->orHavingRaw('SUM(barang_masuk.jumlah) = ?', [$search]);
+			});
 		}
 
 		return DataTables::of($query)
-			->addColumn('detail', function ($item) {
-				$detail = DB::table('detail_barang_masuk')
-					->leftJoin('serial_number', 'detail_barang_masuk.serial_number_id', '=', 'serial_number.id')
-					->leftJoin('status_barang', 'detail_barang_masuk.status_barang_id', '=', 'status_barang.id')
-					->select('serial_number.serial_number as serial_number', 'status_barang.nama as status_barang', 'status_barang.warna as warna_status_barang', 'detail_barang_masuk.kelengkapan as kelengkapan_barang')
-					->where('detail_barang_masuk.barangmasuk_id', $item->barang_masuk_id)
-					->orderBy('serial_number.serial_number', 'asc')
-					->get();
-				return $detail;
-			})
+			// ->addColumn('detail', function ($item) {
+			// 	$detail = DB::table('detail_barang_masuk')
+			// 		->leftJoin('serial_number', 'detail_barang_masuk.serial_number_id', '=', 'serial_number.id')
+			// 		->leftJoin('status_barang', 'detail_barang_masuk.status_barang_id', '=', 'status_barang.id')
+			// 		->select('serial_number.serial_number as serial_number', 'status_barang.nama as status_barang', 'status_barang.warna as warna_status_barang', 'detail_barang_masuk.kelengkapan as kelengkapan_barang')
+			// 		->where('detail_barang_masuk.barangmasuk_id', $item->barang_masuk_id)
+			// 		->orderBy('serial_number.serial_number', 'asc')
+			// 		->get();
+			// 	return $detail;
+			// })
 			->editColumn('tanggal_barang', function ($item) {
 				return \Carbon\Carbon::parse($item->tanggal_barang)->isoFormat('dddd, D MMMM YYYY');
 			})
 			->toJson();
 	}	
+
+	public function show($id)
+	{
+		$detail = DB::table('detail_barang_masuk')
+			->leftJoin('serial_number', 'detail_barang_masuk.serial_number_id', '=', 'serial_number.id')
+			->leftJoin('status_barang', 'detail_barang_masuk.status_barang_id', '=', 'status_barang.id')
+			->select('serial_number.serial_number as serial_number', 'status_barang.nama as status_barang', 'status_barang.warna as warna_status_barang', 'detail_barang_masuk.kelengkapan as kelengkapan_barang')
+			->where('detail_barang_masuk.barangmasuk_id', $id)
+			->orderBy('serial_number.serial_number', 'asc')
+			->get();
+
+    	return response()->json($detail);
+	}
 
 	public function create($id = null)
 	{

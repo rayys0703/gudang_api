@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nama');
             $table->boolean('extend')->default(false);
-            $table->string('nama_tanggal_awal')->default('Tanggal Permintaan');
+            //$table->string('nama_tanggal_awal')->default('Tanggal Permintaan');
             $table->string('nama_tanggal_akhir')->default('Tanggal Pengembalian');
             $table->timestamps();
             $table->unsignedBigInteger('created_by')->nullable();
