@@ -61,17 +61,13 @@ class JenisBarangController extends Controller
 
 		$data = JenisBarang::find($id);
 		if (!$data) {
-            return response()->json(['success' => false, 'message' => 'Data tidak ditemukan.'], 404);
-        }
+			return response()->json(['success' => false, 'message' => 'Data tidak ditemukan.'], 404);
+		}
 
-		if ($data) {
-			$data->nama = $request->nama;
-			$data->save();
+		$data->nama = $request->nama;
+		$data->save();
 
-			return response()->json(['success' => true, 'message' => 'Data berhasil diperbarui!']);
-        }
-
-		return response()->json(['success' => false, 'message' => 'Data tidak ditemukan.']);
+		return response()->json(['success' => true, 'message' => 'Data berhasil diperbarui!']);
 	}
 
 	public function delete($id)

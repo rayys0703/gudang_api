@@ -43,8 +43,8 @@ class BarangController extends Controller
 
 	public function create()
 	{
-		$jenis_barang = DB::table('jenis_barang')->select('id', 'nama')->get();
-		$supplier = DB::table('supplier')->select('id', 'nama')->get();
+		$jenis_barang = DB::table('jenis_barang')->select('id', 'nama')->orderBy('nama')->get();
+		$supplier = DB::table('supplier')->select('id', 'nama')->orderBy('nama')->get();
 		$data = [
 			'jenis_barang' => $jenis_barang,
 			'supplier' => $supplier
@@ -83,8 +83,8 @@ class BarangController extends Controller
 
 	public function edit($id)
 	{
-		$jenis_barang = DB::table('jenis_barang')->select('id', 'nama')->get();
-		$supplier = DB::table('supplier')->select('id', 'nama')->get();
+		$jenis_barang = DB::table('jenis_barang')->select('id', 'nama')->orderBy('nama')->get();
+		$supplier = DB::table('supplier')->select('id', 'nama')->orderBy('nama')->get();
 		$data = Barang::find($id);
 		return response()->json([
 			'data' => $data,

@@ -15,6 +15,7 @@ return new class extends Migration
             $table->bigIncrements('id')->unique()->unsigned();
             $table->unsignedBigInteger('serial_number')->unique();
             $table->unsignedBigInteger('barangmasuk_id');
+            $table->boolean('status')->default(false);
             $table->timestamps();
 
             $table->foreign('barangmasuk_id')->references('id')->on('barang_masuk')->onDelete('cascade')->onUpdate('cascade');
