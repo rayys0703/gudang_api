@@ -12,8 +12,10 @@ use App\Http\Controllers\Api\JenisBarangController;
 use App\Http\Controllers\Api\StatusBarangController;
 use App\Http\Controllers\Api\BarangController;
 use App\Http\Controllers\Api\BarangMasukController;
+use App\Http\Controllers\Api\BarangKeluarController;
 use App\Http\Controllers\Api\KeperluanController;
 use App\Http\Controllers\Api\PermintaanBarangKeluarController;
+use App\Http\Controllers\Api\LaporanController;
 
 /* Autentikasi */
 Route::post('register', [AuthController::class, 'register']);
@@ -61,6 +63,14 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/barangmasuk/delete-selected', [BarangMasukController::class, 'deleteSelected']);
     Route::get('/barangmasuk/{id}', [BarangMasukController::class, 'show']);
 
+    Route::get('/barangkeluar', [BarangKeluarController::class, 'index'])->name('barangkeluar.index');
+    Route::get('/barangkeluar/create/{id?}', [BarangKeluarController::class, 'create'])->name('barangkeluar.create');
+    Route::get('/barangkeluar/get-by-jenis/{id}', [BarangKeluarController::class, 'getBarangByJenis']);
+    Route::post('/barangkeluar/store', [BarangKeluarController::class, 'store'])->name('barangkeluar.store');
+    Route::put('/barangkeluar/update/{id}', [BarangKeluarController::class, 'update'])->name('barangkeluar.update');
+    Route::get('/barangkeluar/delete/{id}', [BarangKeluarController::class, 'delete'])->name('barangkeluar.delete');
+    Route::post('/barangkeluar/delete-selected', [BarangKeluarController::class, 'deleteSelected']);
+
     Route::get('/keperluan', [KeperluanController::class, 'index']);
     Route::post('/keperluan', [KeperluanController::class, 'store']);
     Route::get('/keperluan/{id}', [KeperluanController::class, 'edit']);
@@ -86,7 +96,11 @@ Route::post('/permintaanbarangkeluar/update-status', [PermintaanBarangKeluarCont
 Route::put('/permintaanbarangkeluar/{id}', [PermintaanBarangKeluarController::class, 'update']);
 Route::delete('/permintaanbarangkeluar/{id}', [PermintaanBarangKeluarController::class, 'delete']);
 Route::get('/permintaanbarangkeluar/{id}', [PermintaanBarangKeluarController::class, 'show']);
+Route::get('/permintaanbarangkeluar/get-stok/{barang_id}', [PermintaanBarangKeluarController::class, 'getStok']);
 
+Route::get('/laporan/stok', [LaporanController::class, 'stok'])->name('laporan.stok.index');
+Route::get('/laporan/barangmasuk', [LaporanController::class, 'barangmasuk'])->name('laporan.barangmasuk.index');
+Route::get('/laporan/barangkeluar', [LaporanController::class, 'barangkeluar'])->name('laporan.barangkeluar.index');
 
 // Route::middleware('auth:sanctum')->post('logout', [AuthController::class, 'logout']);
 // Route::middleware('auth:sanctum')->get('user', [AuthController::class, 'user']);

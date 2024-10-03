@@ -17,7 +17,6 @@ use Yajra\DataTables\Facades\DataTables;
 
 class BarangMasukController extends Controller
 {
-
 	public function index(Request $request)
 	{
 		$search = $request->input('search.value');
@@ -26,39 +25,27 @@ class BarangMasukController extends Controller
 			->leftJoin('supplier', 'barang.supplier_id', '=', 'supplier.id')
 			->leftJoin('jenis_barang', 'barang.jenis_barang_id', '=', 'jenis_barang.id')
 			->leftJoin('barang_masuk', 'barang.id', '=', 'barang_masuk.barang_id')
-			->select('barang.*', 'barang_masuk.id as barang_masuk_id', 'barang.nama as nama_barang', 'barang.keterangan as keterangan_barang', DB::raw("DATE_FORMAT(barang_masuk.tanggal, '%W, %e %M %Y') as tanggal_barang"), 'jenis_barang.nama as nama_jenis_barang', 'supplier.nama as nama_supplier', 'barang_masuk.jumlah as jumlah')
-			->groupBy('barang.id', 'barang_masuk.id', 'nama_barang', 'barang.jenis_barang_id', 'barang.supplier_id', 'keterangan_barang', 'tanggal_barang', 'barang.created_at', 'barang.updated_at', 'jenis_barang.nama', 'supplier.nama', 'barang_masuk.jumlah')
+			->select('barang.*', 'barang.id as barang_id', 'barang_masuk.id as barang_masuk_id', 'barang.nama as nama_barang', 'barang.keterangan as keterangan_barang', DB::raw("DATE_FORMAT(barang_masuk.tanggal, '%W, %e %M %Y') as tanggal_barang"), 'jenis_barang.nama as nama_jenis_barang', 'supplier.nama as nama_supplier', 'barang_masuk.jumlah as jumlah', 'barang_masuk.keterangan as keterangan_barangmasuk')
+			->groupBy('barang.id', 'barang_masuk.id', 'nama_barang', 'barang.jenis_barang_id', 'barang.supplier_id', 'keterangan_barang', 'tanggal_barang', 'barang.created_at', 'barang.updated_at', 'jenis_barang.nama', 'supplier.nama', 'barang_masuk.jumlah', 'keterangan_barangmasuk')
 			->havingRaw('barang_masuk.jumlah > 0')
 			->orderBy('barang_masuk.tanggal', 'desc');
 
 		if ($search) {
 			$query->where('barang.nama', 'like', "%{$search}%")
-			->orWhere(DB::raw("DATE_FORMAT(barang_masuk.tanggal, '%W, %e %M %Y')"), 'like', "%{$search}%")
-			->orWhere('supplier.nama', 'like', "%{$search}%");
+				->orWhere(DB::raw("DATE_FORMAT(barang_masuk.tanggal, '%W, %e %M %Y')"), 'like', "%{$search}%")
+				->orWhere('supplier.nama', 'like', "%{$search}%");
 
 			$query->where(function($q) use ($search) {
-				$q->where('barang.nama', 'like', "%{$search}%")
-					->orWhere('barang.keterangan', 'like', "%{$search}%");
-					// ->orHavingRaw('SUM(barang_masuk.jumlah) = ?', [$search]);
+				$q->where('barang.nama', 'like', "%{$search}%");
 			});
 		}
 
 		return DataTables::of($query)
-			// ->addColumn('detail', function ($item) {
-			// 	$detail = DB::table('detail_barang_masuk')
-			// 		->leftJoin('serial_number', 'detail_barang_masuk.serial_number_id', '=', 'serial_number.id')
-			// 		->leftJoin('status_barang', 'detail_barang_masuk.status_barang_id', '=', 'status_barang.id')
-			// 		->select('serial_number.serial_number as serial_number', 'status_barang.nama as status_barang', 'status_barang.warna as warna_status_barang', 'detail_barang_masuk.kelengkapan as kelengkapan_barang')
-			// 		->where('detail_barang_masuk.barangmasuk_id', $item->barang_masuk_id)
-			// 		->orderBy('serial_number.serial_number', 'asc')
-			// 		->get();
-			// 	return $detail;
-			// })
 			->editColumn('tanggal_barang', function ($item) {
 				return \Carbon\Carbon::parse($item->tanggal_barang)->isoFormat('dddd, D MMMM YYYY');
 			})
 			->toJson();
-	}	
+	}
 
 	public function show($id)
 	{
@@ -70,7 +57,7 @@ class BarangMasukController extends Controller
 			->orderBy('serial_number.serial_number', 'asc')
 			->get();
 
-    	return response()->json($detail);
+		return response()->json($detail);
 	}
 
 	public function create($id = null)
@@ -112,28 +99,6 @@ class BarangMasukController extends Controller
 		return response()->json($barang);
 	}
 
-	/*public function createSelected($id)
-	{
-		$barangMasuk = BarangMasuk::findOrFail($id);
-
-		$supplier = DB::table('supplier')->select('id', 'nama')->orderBy('nama', 'asc')->get();
-		$barang = DB::table('barang')->select('id', 'nama')->orderBy('nama', 'asc')->get();
-		$jenis_barang = DB::table('jenis_barang')->select('id', 'nama')->orderBy('nama', 'asc')->get();
-		$status_barang = DB::table('status_barang')->select('id', 'nama')->orderBy('nama', 'asc')->get();
-
-		$bm_kode = DB::table('barang_masuk')->orderBy('id', 'desc')->value('bm_kode');
-
-		if ($bm_kode) {
-			$angkaTerakhir = intval(substr($bm_kode, 3));
-			$angkaSelanjutnya = $angkaTerakhir + 1;
-			$bm_kode_value = 'BM_' . str_pad($angkaSelanjutnya, 3, '0', STR_PAD_LEFT);
-		} else {
-			$bm_kode_value = 'BM_' . str_pad(1, 3, '0', STR_PAD_LEFT);
-		}
-
-		return view('barangmasuk.create', compact('barangMasuk', 'supplier', 'barang', 'jenis_barang', 'status_barang', 'bm_kode_value'));
-	}*/
-
 	public function store(Request $request): JsonResponse
 	{
 		$request->validate([
@@ -158,8 +123,8 @@ class BarangMasukController extends Controller
 			'status_barangs.*.exists' => 'Kondisi Barang yang dipilih tidak valid.',
 			'kelengkapans.string' => 'Kelengkapan harus berupa teks.',
 			'kelengkapans.max' => 'Kelengkapan tidak boleh lebih dari 255 karakter.',
-        ]); 
- 
+		]); 
+
 		$existingSerialNumbers = SerialNumber::whereIn('serial_number', $request->serial_numbers)->pluck('serial_number')->toArray();
 		if (!empty($existingSerialNumbers)) {
 			return response()->json(['success' => false, 'message' => 'Serial number sudah terpakai: ' . implode(', ', $existingSerialNumbers)], 422);
@@ -177,7 +142,7 @@ class BarangMasukController extends Controller
 				'serial_number' => $serialNumber,
 				'barangmasuk_id' => $barangMasuk->id,
 			]);
-	
+
 			DetailBarangMasuk::create([
 				'barangmasuk_id' => $barangMasuk->id,
 				'serial_number_id' => $serial->id,
@@ -189,89 +154,45 @@ class BarangMasukController extends Controller
 		return response()->json(['success' => true, 'message' => 'Data berhasil ditambahkan!']);
 	}
 
-	/*public function edit($id)
+	public function delete($id)
 	{
-		$supplier = DB::table('supplier')->select('id', 'nama')->get();
-		$barang = DB::table('barang')->select('id', 'nama')->get();
-
-		$data = DB::table('barang_masuk')
-			->leftJoin('supplier', 'barang_masuk.supplier_id', '=', 'supplier.id')
-			->leftJoin('barang', 'barang_masuk.barang_id', '=', 'barang.id')
-			->select('barang_masuk.*', 'supplier.nama as nama_supplier', 'barang.nama as nama_barang')
-			->where('barang_masuk.id', '=', $id)
-			->first();
-
-		return view('barangmasuk.edit', compact('supplier', 'barang', 'data'));
+		$data = BarangMasuk::find($id);
+	
+		if ($data) {
+			$serialNumbers = SerialNumber::where('barangmasuk_id', $data->id)->get();
+	
+			foreach ($serialNumbers as $serialNumber) {
+				DetailBarangMasuk::where('serial_number_id', $serialNumber->id)->delete();
+				$serialNumber->delete();
+			}
+	
+			$data->delete();
+	
+			return response()->json(['success' => true, 'message' => 'Data berhasil dihapus!']);
+		} else {
+			return response()->json(['success' => false, 'message' => 'Data tidak ditemukan!']);
+		}
 	}
 
-	public function update($id, Request $request): RedirectResponse
+	public function deleteSelected(Request $request)
 	{
-		$request->validate([
-			'bm_kode' => 'required|string',
-			'serial_number' => 'required|numeric',
-			'supplier_id' => 'required|numeric',
-			'barang_id' => 'required|numeric',
-			//'jumlah' => 'required|numeric|max:255',
-            'keterangan' => 'string|max:255',
-            'tanggal' => 'required|date_format:Y-m-d H:i:s',
-        ]);
+		$ids = $request->input('ids');
 
-		$data = Barang::find($id);
-
-		$data->bm_kode = $request->bm_kode;
-		$data->serial_number = $request->serial_number;
-		$data->supplier_id = $request->supplier_id;
-		$data->barang_id = $request->barang_id;
-		//$data->jumlah = $request->jumlah;
-		$data->keterangan = $request->keterangan;
-		$data->tanggal = $request->tanggal;
-
-		$data->save();
-
-		return redirect('/barangmasuk')->with('success', 'Anda berhasil memperbarui data!');
-	}
-		*/
-
-		public function delete($id)
-		{
+		foreach ($ids as $id) {
 			$data = BarangMasuk::find($id);
-		
+
 			if ($data) {
 				$serialNumbers = SerialNumber::where('barangmasuk_id', $data->id)->get();
-		
+
 				foreach ($serialNumbers as $serialNumber) {
 					DetailBarangMasuk::where('serial_number_id', $serialNumber->id)->delete();
 					$serialNumber->delete();
 				}
-		
+
 				$data->delete();
-		
-				return response()->json(['success' => true, 'message' => 'Data berhasil dihapus!']);
-			} else {
-				return response()->json(['success' => false, 'message' => 'Data tidak ditemukan!']);
 			}
 		}
 
-		public function deleteSelected(Request $request)
-		{
-			$ids = $request->input('ids');
-
-			foreach ($ids as $id) {
-				$data = BarangMasuk::find($id);
-
-				if ($data) {
-					$serialNumbers = SerialNumber::where('barangmasuk_id', $data->id)->get();
-
-					foreach ($serialNumbers as $serialNumber) {
-						DetailBarangMasuk::where('serial_number_id', $serialNumber->id)->delete();
-						$serialNumber->delete();
-					}
-
-					$data->delete();
-				}
-			}
-
-			return response()->json(['success' => true, 'message' => 'Data terpilih berhasil dihapus!']);
-		}
-
+		return response()->json(['success' => true, 'message' => 'Data terpilih berhasil dihapus!']);
+	}
 }

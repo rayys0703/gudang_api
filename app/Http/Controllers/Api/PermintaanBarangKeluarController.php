@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use App\Models\Barang;
 use App\Models\BarangMasuk;
+use App\Models\SerialNumber;
 use App\Models\PermintaanBarangKeluar;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Auth;
@@ -69,69 +70,54 @@ class PermintaanBarangKeluarController extends Controller
 				'barang.nama as nama_barang',
 				'jenis_barang.nama as nama_jenis_barang', 
 				'supplier.nama as nama_supplier',
-				DB::raw('COUNT(detail_permintaan_bk.barang_id) as total_barang')
+				DB::raw('SUM(detail_permintaan_bk.jumlah) as total_barang'),
+				//DB::raw('COUNT(detail_permintaan_bk.barang_id) as total_count')
 			)
 			->where('detail_permintaan_bk.permintaan_barang_keluar_id', $id)
 			->groupBy('barang.id', 'barang.nama', 'jenis_barang.nama', 'supplier.nama')
-			->get();		return response()->json($detail);
+			->get();		
+		
+		return response()->json($detail);	
 	}
 
 	public function create($id = null)
 	{
-		// $barangMasuk = null;
-		// $jenis_barang_id = null;
-		// $barangbyjenis = null;
-		// $jenis_barang = DB::table('jenis_barang')->select('id', 'nama')->orderBy('nama', 'asc')->get();
-		// $barang = DB::table('barang')
-		// 	->join('jenis_barang', 'barang.jenis_barang_id', '=', 'jenis_barang.id')
-		// 	->select('barang.id', 'barang.nama', 'jenis_barang.nama as jenis_barang_nama')
-		// 	->orderBy('jenis_barang.nama', 'asc')
-		// 	->orderBy('barang.nama', 'asc')			
-		// 	->get();
-		
-		// $customer = DB::table('customer')->select('id', 'nama')->orderBy('nama', 'asc')->get();
-		// $keperluan = DB::table('keperluan')
-        // ->select('id', 'nama', 'extend', 'nama_tanggal_awal', 'nama_tanggal_akhir')
-        // ->orderBy('nama', 'asc')->get();
+		$jenis_barang = DB::table('jenis_barang')->select('id', 'nama')->orderBy('nama', 'asc')->get();
+		$barang = DB::table('barang')
+			->join('jenis_barang', 'barang.jenis_barang_id', '=', 'jenis_barang.id')
+			->select('barang.id', 'barang.nama', 'jenis_barang.nama as jenis_barang_nama')
+			->orderBy('jenis_barang.nama', 'asc')
+			->orderBy('barang.nama', 'asc')			
+			->get();
+		$customer = DB::table('customer')->select('id', 'nama')->orderBy('nama', 'asc')->get();
+		$keperluan = DB::table('keperluan')
+			->select('id', 'nama', 'extend', 'nama_tanggal_akhir')
+			->orderBy('nama', 'asc')->get();
 
-        // return view('permintaanbarangkeluar.create', compact('barangMasuk', 'customer', 'barang', 'barangbyjenis', 'jenis_barang', 'jenis_barang_id', 'keperluan'));
-		
-			$jenis_barang = DB::table('jenis_barang')->select('id', 'nama')->orderBy('nama', 'asc')->get();
-			$barang = DB::table('barang')
-					->join('jenis_barang', 'barang.jenis_barang_id', '=', 'jenis_barang.id')
-					->select('barang.id', 'barang.nama', 'jenis_barang.nama as jenis_barang_nama')
-					->orderBy('jenis_barang.nama', 'asc')
-					->orderBy('barang.nama', 'asc')			
-					->get();
-			$customer = DB::table('customer')->select('id', 'nama')->orderBy('nama', 'asc')->get();
-			$keperluan = DB::table('keperluan')
-					->select('id', 'nama', 'extend', 'nama_tanggal_akhir')
-					->orderBy('nama', 'asc')->get();
+		$data = [
+			'jenis_barang' => $jenis_barang,
+			'barang' => $barang,
+			'customer' => $customer,
+			'keperluan' => $keperluan,
+			'barangMasuk' => null,
+			'barangbyjenis' => null,
+			'jenis_barang_id' => null
+		];
 
-			$data = [
-					'jenis_barang' => $jenis_barang,
-					'barang' => $barang,
-					'customer' => $customer,
-					'keperluan' => $keperluan,
-					'barangMasuk' => null,
-					'barangbyjenis' => null,
-					'jenis_barang_id' => null
-			];
+		if ($id !== null) {
+			$barangMasuk = DB::table('barang_masuk')->where('id', $id)->first();
+			$jenis_barang_id = DB::table('barang')
+				->join('jenis_barang', 'barang.jenis_barang_id', '=', 'jenis_barang.id')
+				->where('barang.id', $barangMasuk->barang_id)
+				->value('jenis_barang.id');
+			$barangbyjenis = DB::table('barang')->where('jenis_barang_id', $jenis_barang_id)->orderBy('nama', 'asc')->get();
 
-			if ($id !== null) {
-					$barangMasuk = DB::table('barang_masuk')->where('id', $id)->first();
-					$jenis_barang_id = DB::table('barang')
-							->join('jenis_barang', 'barang.jenis_barang_id', '=', 'jenis_barang.id')
-							->where('barang.id', $barangMasuk->barang_id)
-							->value('jenis_barang.id');
-					$barangbyjenis = DB::table('barang')->where('jenis_barang_id', $jenis_barang_id)->orderBy('nama', 'asc')->get();
+			$data['barangMasuk'] = $barangMasuk;
+			$data['jenis_barang_id'] = $jenis_barang_id;
+			$data['barangbyjenis'] = $barangbyjenis;
+		}
 
-					$data['barangMasuk'] = $barangMasuk;
-					$data['jenis_barang_id'] = $jenis_barang_id;
-					$data['barangbyjenis'] = $barangbyjenis;
-			}
-
-			return response()->json($data);
+		return response()->json($data);
 	}
 
 	public function getBarangByJenis($id)
@@ -148,6 +134,18 @@ class PermintaanBarangKeluarController extends Controller
 		return response()->json($barang);
 	}
 
+	public function getStok($barang_id)
+	{
+		$stok = DB::table('serial_number')
+			->join('barang_masuk', 'serial_number.barangmasuk_id', '=', 'barang_masuk.id')
+			->join('barang', 'barang_masuk.barang_id', '=', 'barang.id')
+			->where('barang.id', $barang_id)
+			->where('serial_number.status', false)
+			->count();
+
+		return response()->json(['stok' => $stok]);
+	}
+
 	public function getSerialNumberByBarang($id)
 	{
 		$serialnumber = DB::table('serial_number')
@@ -162,8 +160,8 @@ class PermintaanBarangKeluarController extends Controller
 							->orWhere('permintaan_barang_keluar.status', '!=', 'Ditolak');
 					});
 			})*/
-			->orderBy('serial_number.serial_number', 'asc') // Mengurutkan berdasarkan serial_number
-			->pluck('serial_number.serial_number'); // Memilih kolom serial_number dari tabel serial_number
+			->orderBy('serial_number.serial_number', 'asc')
+			->pluck('serial_number.serial_number');
 
 		return response()->json($serialnumber);
 	}
@@ -175,6 +173,8 @@ class PermintaanBarangKeluarController extends Controller
 			// 'serial_numbers.*' => 'required|numeric',
 			'barang_ids' => 'required|array',
 			'barang_ids.*' => 'required|numeric',
+			'jumlah_barangs' => 'required|array',
+			'jumlah_barangs.*' => 'required|numeric',
 			'customer_id' => 'required|numeric',
 			'keperluan_id' => 'required|numeric',
 			'keterangan' => 'nullable|string|max:255',
@@ -189,6 +189,10 @@ class PermintaanBarangKeluarController extends Controller
 			'barang_ids.array' => 'Barang harus berupa array.',
 			'barang_ids.*.required' => 'Setiap Barang harus diisi.',
 			'barang_ids.*.numeric' => 'Barang harus berupa angka.',
+			'jumlah_barangs.required' => 'Jumlah barang harus diisi.',
+			'jumlah_barangs.array' => 'Jumlah barang harus berupa array.',
+			'jumlah_barangs.*.required' => 'Setiap Jumlah barang harus diisi.',
+			'jumlah_barangs.*.numeric' => 'Jumlah barang harus berupa angka.',
 			'customer_id.required' => 'Penerima harus dipilih.',
 			'customer_id.numeric' => 'ID Penerima barang harus berupa angka.',
 			'keperluan_id.required' => 'Keperluan harus dipilih.',
@@ -200,10 +204,8 @@ class PermintaanBarangKeluarController extends Controller
 			'tanggal_akhir.date_format' => 'Format tanggal harus YYYY-MM-DD.',
 		]);
 
-		// Hitung jumlah dari total serial number
-		$jumlah = count($request->barang_ids);
+		$jumlah = array_sum($request->jumlah_barangs);
 
-		// Simpan permintaan_barang_keluar
 		$permintaan = PermintaanBarangKeluar::create([
 			'customer_id' => $request->customer_id,
 			'keperluan_id' => $request->keperluan_id,
@@ -213,8 +215,7 @@ class PermintaanBarangKeluarController extends Controller
 			'tanggal_akhir' => $request->tanggal_akhir ?? null,
 		]);
 
-		// Simpan detail_permintaan_bk
-		foreach ($request->barang_ids as $barangId) {
+		foreach ($request->barang_ids as $index => $barangId) {
 			$barangIdData = DB::table('barang')
 				->where('id', $barangId)
 				->first();
@@ -223,11 +224,19 @@ class PermintaanBarangKeluarController extends Controller
 				return response()->json(['success' => false, 'message' => 'Barang ' . $barangId . ' tidak ditemukan.'], 400);
 			}
 
-			DB::table('detail_permintaan_bk')->insert([
+			$detailId = DB::table('detail_permintaan_bk')->insertGetId([
 				'permintaan_barang_keluar_id' => $permintaan->id,
 				'barang_id' => $barangIdData->id,
+				'jumlah' => $request->jumlah_barangs[$index],
 				'keterangan' => $request->keterangan,
 			]);
+
+			// for ($i = 0; $i < $request->jumlah_barangs[$index]; $i++) {
+			// 	DB::table('serial_number_permintaan')->insert([
+			// 		'detail_permintaan_bk_id' => $detailId,
+			// 		'serial_number_id' => null,
+			// 	]);
+			// }
 		}
 
 		return response()->json(['success' => true, 'message' => 'Data berhasil ditambahkan!']);
@@ -253,61 +262,100 @@ class PermintaanBarangKeluarController extends Controller
 
 	public function updateStatus(Request $request)
 	{
+		// Validasi input
 		$request->validate([
 			'id' => 'required|numeric',
 			'status' => 'required|string',
 		]);
 
+		// Temukan permintaan berdasarkan ID
 		$permintaan = PermintaanBarangKeluar::findOrFail($request->id);
 
+		// Cek apakah status permintaan dapat diubah
 		if (!in_array($permintaan->status, ['Disetujui', 'Ditolak'])) {
+			// Perbarui status permintaan
 			$permintaan->status = $request->status;
 			$permintaan->save();
 
+			// Jika status permintaan adalah 'Disetujui'
 			if ($request->status === 'Disetujui') {
-				$permintaanBarang = DB::table('permintaan_barang_keluar')
-					->select('permintaan_barang_keluar.*')
-					->where('permintaan_barang_keluar.id', $request->id)
-					->first();
+				// Ambil detail permintaan
+				$detailPermintaan = DB::table('detail_permintaan_bk')
+					->where('permintaan_barang_keluar_id', $permintaan->id)
+					->get();
 
-				if ($permintaanBarang) {
-					$insertData = DB::table('barang_keluar')->insert([
-						'permintaan_id' => $permintaanBarang->id,
-						'tanggal' => now(),
-						'created_at' => now(),
-					]);
+				// Menyimpan id serial number yang telah dipilih
+				$serialNumbersUsed = [];
 
-					// Update barang jika diperlukan
-					if ($insertData) {
-						$detailPermintaan = DB::table('detail_permintaan_bk')
-							->where('permintaan_barang_keluar_id', $permintaanBarang->id)
-							->get();
+				foreach ($detailPermintaan as $detail) {
+					// Cek jumlah barang di barang_masuk yang cukup
+					$availableStock = DB::table('barang_masuk')
+						->where('barang_id', $detail->barang_id)
+						->sum('jumlah');
 
-						foreach ($detailPermintaan as $detail) {
+					// Jika stock tidak cukup, kembalikan respon gagal
+					if ($availableStock < $detail->jumlah) {
+						return response()->json([
+							'success' => false,
+							'message' => 'Stok tidak cukup untuk memenuhi permintaan.',
+							'data' => $permintaan,
+						]);
+					}
+
+					// Ambil serial number yang belum digunakan dan sesuai dengan barang_id
+					$serialNumbers = DB::table('serial_number')
+						->where('barangmasuk_id', $detail->barang_id)
+						->where('status', 0) // Hanya ambil yang status 0
+						->take($detail->jumlah) // Ambil sesuai dengan jumlah yang diminta
+						->get();
+
+					// Update serial_number_permintaan dengan serial number yang diambil
+					foreach ($serialNumbers as $serialNumber) {
+						// Periksa untuk menghindari duplikasi
+						if (!in_array($serialNumber->id, $serialNumbersUsed)) {
+							// Menyisipkan ke tabel serial_number_permintaan
+							DB::table('serial_number_permintaan')->insert([
+								'detail_permintaan_bk_id' => $detail->id,
+								'serial_number_id' => $serialNumber->id,
+							]);
+
+							// Kurangi jumlah barang di tabel barang_masuk
 							DB::table('barang_masuk')
-								->join('serial_number', 'serial_number.barangmasuk_id', '=', 'barang_masuk.id')
-								->where('serial_number.id', $detail->serial_number_id)
-								->decrement('barang_masuk.jumlah', 1);
+								->where('id', $serialNumber->barangmasuk_id)
+								->decrement('jumlah', 1);
 
+							// Tandai serial number sebagai digunakan
+							$serialNumbersUsed[] = $serialNumber->id;
+
+							// Perbarui status serial number menjadi 1 (true)
 							DB::table('serial_number')
-								->where('id', $detail->serial_number_id)
+								->where('id', $serialNumber->id)
 								->update(['status' => 1]);
 						}
-					}				
+					}
 				}
+
+				// Insert data ke barang_keluar
+				DB::table('barang_keluar')->insert([
+					'permintaan_id' => $permintaan->id,
+					'tanggal' => now(),
+					//'keterangan' => 'Diterima', // bisa diubah sesuai kebutuhan
+				]);
 			}
 
+			// Mengembalikan respon sukses
 			return response()->json([
 				'success' => true,
 				'message' => 'Status permintaan berhasil diperbarui',
-				'data' => $permintaan
+				'data' => $permintaan,
 			]);
 		}
 
+		// Mengembalikan respon gagal jika status tidak dapat diubah
 		return response()->json([
 			'success' => false,
 			'message' => 'Status permintaan tidak dapat diubah karena sudah disetujui atau ditolak',
-			'data' => $permintaan
+			'data' => $permintaan,
 		]);
 	}
 

@@ -15,8 +15,9 @@ return new class extends Migration
             $table->bigIncrements('id')->unique()->unsigned();
             $table->unsignedBigInteger('permintaan_barang_keluar_id');
             $table->unsignedBigInteger('barang_id'); // serial_number_id
+            $table->unsignedBigInteger('jumlah');
             $table->string('keterangan')->nullable();
-            $table->timestamps();
+            //$table->timestamps();
 
             $table->foreign('permintaan_barang_keluar_id')->references('id')->on('permintaan_barang_keluar')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('barang_id')->references('id')->on('barang')->onDelete('cascade')->onUpdate('cascade');
