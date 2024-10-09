@@ -203,8 +203,8 @@ class PermintaanBarangKeluarController extends Controller
 			'customer_id' => 'required|numeric',
 			'keperluan_id' => 'required|numeric',
 			'keterangan' => 'nullable|string|max:255',
-			'tanggal_awal' => 'required|date_format:Y-m-d',
-			'tanggal_akhir' => 'nullable|date_format:Y-m-d',
+			// 'tanggal_awal' => 'required|date_format:Y-m-d',
+			// 'tanggal_akhir' => 'nullable|date_format:Y-m-d',
 		], [
 			// 'serial_numbers.required' => 'Serial Number harus diisi.',
 			// 'serial_numbers.array' => 'Serial Number harus berupa array.',
@@ -224,9 +224,9 @@ class PermintaanBarangKeluarController extends Controller
 			'keperluan_id.numeric' => 'ID Keperluan harus berupa angka.',
 			'keterangan.string' => 'Keterangan harus berupa teks.',
 			'keterangan.max' => 'Keterangan tidak boleh lebih dari 255 karakter.',
-			'tanggal_awal.required' => 'Tanggal harus diisi.',
-			'tanggal_awal.date_format' => 'Format tanggal harus YYYY-MM-DD.',
-			'tanggal_akhir.date_format' => 'Format tanggal harus YYYY-MM-DD.',
+			// 'tanggal_awal.required' => 'Tanggal harus diisi.',
+			// 'tanggal_awal.date_format' => 'Format tanggal harus YYYY-MM-DD.',
+			// 'tanggal_akhir.date_format' => 'Format tanggal harus YYYY-MM-DD.',
 		]);
 
 		$jumlah = array_sum($request->jumlah_barangs);
@@ -236,7 +236,8 @@ class PermintaanBarangKeluarController extends Controller
 			'keperluan_id' => $request->keperluan_id,
 			'jumlah' => $jumlah,
 			'keterangan' => $request->keterangan,
-			'tanggal_awal' => $request->tanggal_awal,
+			// 'tanggal_awal' => $request->tanggal_awal,
+			'tanggal_awal' => now(),
 			'tanggal_akhir' => $request->tanggal_akhir ?? null,
 		]);
 
@@ -342,6 +343,7 @@ class PermintaanBarangKeluarController extends Controller
 					'barang.nama as nama_barang',
 					'detail_permintaan_bk.jumlah')
 			->orderBy('barang.nama', 'asc')
+			->orderBy('serial_number.serial_number', 'asc')
 			->get();
 
         return response()->json($serialNumbers);

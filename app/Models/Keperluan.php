@@ -13,7 +13,7 @@ class Keperluan extends Model
 
     protected $fillable = [
         'nama',
-        //'nama_tanggal_awal',
+        'batas_hari',
         'nama_tanggal_akhir',
         'extend'
     ];
