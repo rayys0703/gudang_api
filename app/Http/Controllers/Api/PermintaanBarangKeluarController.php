@@ -334,8 +334,10 @@ class PermintaanBarangKeluarController extends Controller
 			->join('barang', 'detail_permintaan_bk.barang_id', '=', 'barang.id')
 			->join('barang_masuk', 'barang.id', '=', 'barang_masuk.barang_id')
 			->join('serial_number', 'barang_masuk.id', '=', 'serial_number.barangmasuk_id')
+			->join('detail_barang_masuk', 'serial_number.id', '=', 'detail_barang_masuk.serial_number_id')
 			->where('detail_permintaan_bk.permintaan_barang_keluar_id', $id)
 			->where('serial_number.status', 0)
+			->where('detail_barang_masuk.status_barang_id', 1)
 			->select(DB::raw('ROW_NUMBER() OVER (PARTITION BY barang.nama ORDER BY serial_number.id) AS id'), 
 					'serial_number.id as serial_number_id',
 					'serial_number.serial_number',
