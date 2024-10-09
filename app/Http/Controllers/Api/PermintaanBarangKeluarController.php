@@ -9,6 +9,7 @@ use App\Models\Barang;
 use App\Models\BarangMasuk;
 use App\Models\SerialNumber;
 use App\Models\PermintaanBarangKeluar;
+use App\Models\DetailPermintaanBarangKeluar;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -75,9 +76,28 @@ class PermintaanBarangKeluarController extends Controller
 			)
 			->where('detail_permintaan_bk.permintaan_barang_keluar_id', $id)
 			->groupBy('barang.id', 'barang.nama', 'jenis_barang.nama', 'supplier.nama')
+			->orderBy('barang.nama', 'asc')
 			->get();		
 		
 		return response()->json($detail);	
+	}
+
+	public function getSerialNumbers($id)
+	{
+		$serialNumbers = DB::table('detail_permintaan_bk')
+			->leftJoin('serial_number_permintaan', 'detail_permintaan_bk.id', '=', 'serial_number_permintaan.detail_permintaan_bk_id')
+			->leftJoin('barang', 'detail_permintaan_bk.barang_id', '=', 'barang.id')
+			->leftJoin('serial_number', 'serial_number_permintaan.serial_number_id', '=', 'serial_number.id')
+			->select(
+				'barang.id as barang_id',
+				'barang.nama as nama_barang',
+				'serial_number.serial_number'
+			)
+			->where('detail_permintaan_bk.permintaan_barang_keluar_id', $id)
+			->orderBy('serial_number.serial_number', 'asc')
+			->get();
+
+		return response()->json($serialNumbers);
 	}
 
 	public function create($id = null)
@@ -124,13 +144,16 @@ class PermintaanBarangKeluarController extends Controller
 	{
 		$barang = DB::table('serial_number')
 			->join('barang_masuk', 'serial_number.barangmasuk_id', '=', 'barang_masuk.id')
+			->join('detail_barang_masuk', 'barang_masuk.id', '=', 'detail_barang_masuk.barangmasuk_id')
 			->join('barang', 'barang_masuk.barang_id', '=', 'barang.id')
 			->where('barang.jenis_barang_id', $id)
 			->where('serial_number.status', false)
+			->where('detail_barang_masuk.status_barang_id', 1)
 			->select('barang.id', 'barang.nama')
 			->distinct()
 			->orderBy('barang.nama', 'asc')
 			->get();
+			
 		return response()->json($barang);
 	}
 
@@ -139,8 +162,10 @@ class PermintaanBarangKeluarController extends Controller
 		$stok = DB::table('serial_number')
 			->join('barang_masuk', 'serial_number.barangmasuk_id', '=', 'barang_masuk.id')
 			->join('barang', 'barang_masuk.barang_id', '=', 'barang.id')
+			->join('detail_barang_masuk', 'serial_number.id', '=', 'detail_barang_masuk.serial_number_id')
 			->where('barang.id', $barang_id)
 			->where('serial_number.status', false)
+			->where('detail_barang_masuk.status_barang_id', 1)
 			->count();
 
 		return response()->json(['stok' => $stok]);
@@ -262,101 +287,143 @@ class PermintaanBarangKeluarController extends Controller
 
 	public function updateStatus(Request $request)
 	{
-		// Validasi input
 		$request->validate([
 			'id' => 'required|numeric',
 			'status' => 'required|string',
 		]);
 
-		// Temukan permintaan berdasarkan ID
 		$permintaan = PermintaanBarangKeluar::findOrFail($request->id);
 
-		// Cek apakah status permintaan dapat diubah
-		if (!in_array($permintaan->status, ['Disetujui', 'Ditolak'])) {
-			// Perbarui status permintaan
-			$permintaan->status = $request->status;
-			$permintaan->save();
+		if (in_array($permintaan->status, ['Belum Disetujui'])) {
 
-			// Jika status permintaan adalah 'Disetujui'
-			if ($request->status === 'Disetujui') {
-				// Ambil detail permintaan
-				$detailPermintaan = DB::table('detail_permintaan_bk')
-					->where('permintaan_barang_keluar_id', $permintaan->id)
-					->get();
+			if ($request->status === 'Diproses') {
+				/////////
 
-				// Menyimpan id serial number yang telah dipilih
-				$serialNumbersUsed = [];
+				$permintaan->status = $request->status;
+				$permintaan->save();
 
-				foreach ($detailPermintaan as $detail) {
-					// Cek jumlah barang di barang_masuk yang cukup
-					$availableStock = DB::table('barang_masuk')
-						->where('barang_id', $detail->barang_id)
-						->sum('jumlah');
+				return response()->json([
+					'success' => true,
+					'message' => 'Status permintaan berhasil diproses',
+					'data' => $permintaan
+				]);
 
-					// Jika stock tidak cukup, kembalikan respon gagal
-					if ($availableStock < $detail->jumlah) {
-						return response()->json([
-							'success' => false,
-							'message' => 'Stok tidak cukup untuk memenuhi permintaan.',
-							'data' => $permintaan,
-						]);
-					}
+			} elseif ($request->status === 'Ditolak') {
+				$permintaan->status = $request->status;
+				$permintaan->save();
 
-					// Ambil serial number yang belum digunakan dan sesuai dengan barang_id
-					$serialNumbers = DB::table('serial_number')
-						->where('barangmasuk_id', $detail->barang_id)
-						->where('status', 0) // Hanya ambil yang status 0
-						->take($detail->jumlah) // Ambil sesuai dengan jumlah yang diminta
-						->get();
-
-					// Update serial_number_permintaan dengan serial number yang diambil
-					foreach ($serialNumbers as $serialNumber) {
-						// Periksa untuk menghindari duplikasi
-						if (!in_array($serialNumber->id, $serialNumbersUsed)) {
-							// Menyisipkan ke tabel serial_number_permintaan
-							DB::table('serial_number_permintaan')->insert([
-								'detail_permintaan_bk_id' => $detail->id,
-								'serial_number_id' => $serialNumber->id,
-							]);
-
-							// Kurangi jumlah barang di tabel barang_masuk
-							DB::table('barang_masuk')
-								->where('id', $serialNumber->barangmasuk_id)
-								->decrement('jumlah', 1);
-
-							// Tandai serial number sebagai digunakan
-							$serialNumbersUsed[] = $serialNumber->id;
-
-							// Perbarui status serial number menjadi 1 (true)
-							DB::table('serial_number')
-								->where('id', $serialNumber->id)
-								->update(['status' => 1]);
-						}
-					}
-				}
-
-				// Insert data ke barang_keluar
-				DB::table('barang_keluar')->insert([
-					'permintaan_id' => $permintaan->id,
-					'tanggal' => now(),
-					//'keterangan' => 'Diterima', // bisa diubah sesuai kebutuhan
+				return response()->json([
+					'success' => true,
+					'message' => 'Status permintaan berhasil ditolak',
+					'data' => $permintaan
 				]);
 			}
-
-			// Mengembalikan respon sukses
-			return response()->json([
-				'success' => true,
-				'message' => 'Status permintaan berhasil diperbarui',
-				'data' => $permintaan,
-			]);
 		}
 
-		// Mengembalikan respon gagal jika status tidak dapat diubah
 		return response()->json([
 			'success' => false,
 			'message' => 'Status permintaan tidak dapat diubah karena sudah disetujui atau ditolak',
-			'data' => $permintaan,
+			'data' => $permintaan
 		]);
+	}
+
+	public function selectSN($id)
+    {
+        $serialNumbers = DB::table('detail_permintaan_bk')
+			->join('barang', 'detail_permintaan_bk.barang_id', '=', 'barang.id')
+			->join('barang_masuk', 'barang.id', '=', 'barang_masuk.barang_id')
+			->join('serial_number', 'barang_masuk.id', '=', 'serial_number.barangmasuk_id')
+			->where('detail_permintaan_bk.permintaan_barang_keluar_id', $id)
+			->where('serial_number.status', 0)
+			->select(DB::raw('ROW_NUMBER() OVER (PARTITION BY barang.nama ORDER BY serial_number.id) AS id'), 
+					'serial_number.id as serial_number_id',
+					'serial_number.serial_number',
+					'barang.id as barang_id', 
+					'barang.nama as nama_barang',
+					'detail_permintaan_bk.jumlah')
+			->orderBy('barang.nama', 'asc')
+			->get();
+
+        return response()->json($serialNumbers);
+    }
+
+	public function setSN(Request $request)
+	{
+		$validated = $request->validate([
+			'permintaan_id' => 'required|integer',
+			'serial_number_ids' => 'required|array',
+			'serial_number_ids.*' => 'required|array',  // Barang ID
+			'serial_number_ids.*.*' => 'required|integer',  // SN ID
+		]);
+
+		$permintaanBarang = DB::table('permintaan_barang_keluar')
+			->where('id', $validated['permintaan_id'])
+			->first();
+
+		if (!$permintaanBarang) {
+			return response()->json(['success' => false, 'message' => 'Permintaan barang tidak ditemukan.'], 404);
+		}
+
+		$detailPermintaan = DB::table('detail_permintaan_bk')
+			->where('permintaan_barang_keluar_id', $permintaanBarang->id)
+			->get();
+
+		foreach ($detailPermintaan as $detail) {
+			// Ambil serial numbers yang dikirim dari request sesuai dengan barang_id
+			$serialNumbers = $validated['serial_number_ids'][$detail->barang_id] ?? [];
+
+			// Cek apakah jumlah serial number yang dikirim cukup
+			if (count($serialNumbers) < $detail->jumlah) {
+				return response()->json(['success' => false, 'message' => 'Jumlah serial number yang dikirim tidak mencukupi.'], 400);
+			}
+
+			// Loop serial numbers yang dipilih
+			foreach ($serialNumbers as $serialNumberId) {
+				// Pastikan serial number tersedia dan belum digunakan
+				$serialNumber = DB::table('serial_number')
+					->join('barang_masuk', 'serial_number.barangmasuk_id', '=', 'barang_masuk.id')
+					->join('detail_barang_masuk', 'barang_masuk.id', '=', 'detail_barang_masuk.barangmasuk_id')
+					->where('serial_number.id', $serialNumberId)
+					->where('barang_masuk.barang_id', $detail->barang_id)
+					->where('serial_number.status', 0)  // Serial number belum digunakan
+					->where('detail_barang_masuk.status_barang_id', 1)  // Status barang "Baik"
+					->select('serial_number.*')
+					->first();
+
+				if (!$serialNumber) {
+					return response()->json(['success' => false, 'message' => "Serial number $serialNumberId tidak valid atau sudah digunakan."], 400);
+				}
+
+				// Insert serial_number_permintaan
+				DB::table('serial_number_permintaan')->insert([
+					'detail_permintaan_bk_id' => $detail->id,
+					'serial_number_id' => $serialNumber->id,
+				]);
+
+				// Update jumlah barang masuk di tabel barang_masuk
+				DB::table('barang_masuk')
+					->where('id', $serialNumber->barangmasuk_id)
+					->decrement('jumlah', 1);
+
+				// Tandai serial number sebagai sudah digunakan
+				DB::table('serial_number')
+					->where('id', $serialNumber->id)
+					->update(['status' => 1]);
+			}
+		}
+
+		// Insert data ke barang_keluar setelah semua serial number berhasil diambil
+		DB::table('barang_keluar')->insert([
+			'permintaan_id' => $permintaanBarang->id,
+			'tanggal' => now(),
+			'created_at' => now(),
+		]);
+
+		DB::table('permintaan_barang_keluar')
+			->where('id', $permintaanBarang->id)
+			->update(['status' => 'Disetujui']);
+
+		return response()->json(['success' => true, 'message' => 'Serial number berhasil disimpan dan barang keluar berhasil diproses.'], 200);
 	}
 
 }

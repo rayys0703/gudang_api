@@ -96,10 +96,10 @@ class DatabaseSeeder extends Seeder
 
         $keperluan = [
             [
-                'nama' => 'Untuk Dipinjam',
+                'nama' => 'Untuk Dipasang',
             ],
             [
-                'nama' => 'Untuk Dipasang',
+                'nama' => 'Untuk Dipinjam',
             ],
         ];
 
@@ -110,10 +110,10 @@ class DatabaseSeeder extends Seeder
         $barang = [];
         $jenis_barang = ['makanan', 'minuman', 'elektronik', 'alat rumah tangga'];
         $nama_barang = [
-            'makanan' => ['Nasi Goreng', 'Rendang', 'Sate', 'Gado-gado', 'Bakso', 'Mie Ayam', 'Soto', 'Pempek', 'Martabak', 'Nasi Uduk'],
-            'minuman' => ['Es Teh', 'Es Jeruk', 'Kopi', 'Jus Alpukat', 'Es Cendol', 'Es Cincau', 'Wedang Jahe', 'Soda Gembira', 'Es Kelapa Muda'],
-            'elektronik' => ['Televisi', 'Kulkas', 'Mesin Cuci', 'AC', 'Kipas Angin', 'Rice Cooker', 'Blender', 'Setrika', 'Microwave', 'Dispenser'],
-            'alat rumah tangga' => ['Sapu', 'Pel', 'Ember', 'Keset', 'Rak Piring', 'Gelas', 'Sendok', 'Gunting', 'Pisau']
+            'makanan' => ['Ayam Geprek', 'Nasi Goreng', 'Rendang', 'Sate', 'Gado-gado', 'Bakso', 'Mie Ayam', 'Soto', 'Pempek', 'Seblak', 'Nasi Uduk', 'Sop Buntut', 'Nasi Kuning', 'Lontong Sayur', 'Ketoprak', 'Bubur Ayam', 'Nasi Campur', 'Sop Iga', 'Rawon', 'Gudeg'],
+            'minuman' => ['Es Teh', 'Es Jeruk', 'Kopi', 'Jus Alpukat', 'Es Cendol', 'Es Cincau', 'Wedang Jahe', 'Es Kelapa Muda', 'Teh Tarik', 'Bandrek', 'Sekoteng', 'Jus Mangga', 'Es Doger', 'Es Teler', 'Susu Kedelai', 'Es Campur', 'Cendol'],
+            'elektronik' => ['Televisi', 'Kulkas', 'Mesin Cuci', 'AC', 'Kipas Angin', 'Rice Cooker', 'Blender', 'Setrika', 'Microwave', 'Dispenser', 'Laptop', 'Smartphone', 'Tablet', 'Speaker', 'Headphone', 'Printer', 'Scanner', 'Vacuum Cleaner', 'Hair Dryer'],
+            'alat rumah tangga' => ['Sapu', 'Pel', 'Ember', 'Keset', 'Rak Piring', 'Gelas', 'Sendok', 'Gunting', 'Pisau', 'Panci', 'Wajan', 'Talenan', 'Garpu', 'Mangkuk', 'Toples', 'Serbet', 'Tempat Sampah', 'Sikat WC', 'Gayung', 'Rak Sepatu']        
         ];
 
         for ($i = 0; $i < 15; $i++) {
@@ -205,5 +205,38 @@ class DatabaseSeeder extends Seeder
         ];
 
         DB::table('detail_barang_masuk')->insert($detail_barang_masuk);
+
+        ///
+
+        $permintaan_barang_keluar = [
+            [
+                'customer_id' => 6,
+                'keperluan_id' => 1,
+                'jumlah' => 3,
+                'tanggal_awal' => now(),
+                'tanggal_akhir' => now()->addDays(10),
+                'status' => "Belum Disetujui",
+                'created_at' => now(),
+            ],
+        ];
+
+        DB::table('permintaan_barang_keluar')->insert($permintaan_barang_keluar);
+
+        ///
+
+        $detail_permintaan_bk = [
+            [
+                'permintaan_barang_keluar_id' => 1,
+                'barang_id' => 1,
+                'jumlah' => 2,
+            ],
+            [
+                'permintaan_barang_keluar_id' => 1,
+                'barang_id' => 2,
+                'jumlah' => 1,
+            ],
+        ];
+
+        DB::table('detail_permintaan_bk')->insert($detail_permintaan_bk);
     }
 }
