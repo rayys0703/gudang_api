@@ -142,10 +142,21 @@ class PermintaanBarangKeluarController extends Controller
 
 	public function getBarangByJenis($id)
 	{
-		$barang = DB::table('serial_number')
-			->join('barang_masuk', 'serial_number.barangmasuk_id', '=', 'barang_masuk.id')
-			->join('detail_barang_masuk', 'barang_masuk.id', '=', 'detail_barang_masuk.barangmasuk_id')
+		// $barang = DB::table('serial_number')
+		// 	->join('barang_masuk', 'serial_number.barangmasuk_id', '=', 'barang_masuk.id')
+		// 	->join('detail_barang_masuk', 'barang_masuk.id', '=', 'detail_barang_masuk.barangmasuk_id')
+		// 	->join('barang', 'barang_masuk.barang_id', '=', 'barang.id')
+		// 	->where('barang.jenis_barang_id', $id)
+		// 	->where('serial_number.status', false)
+		// 	->where('detail_barang_masuk.status_barang_id', 1)
+		// 	->select('barang.id', 'barang.nama')
+		// 	->distinct()
+		// 	->orderBy('barang.nama', 'asc')
+		// 	->get();
+		$barang = DB::table('barang_masuk')
 			->join('barang', 'barang_masuk.barang_id', '=', 'barang.id')
+			->join('detail_barang_masuk', 'barang_masuk.id', '=', 'detail_barang_masuk.barangmasuk_id')
+			->join('serial_number', 'detail_barang_masuk.serial_number_id', '=', 'serial_number.id')
 			->where('barang.jenis_barang_id', $id)
 			->where('serial_number.status', false)
 			->where('detail_barang_masuk.status_barang_id', 1)
@@ -386,6 +397,14 @@ class PermintaanBarangKeluarController extends Controller
 			'serial_number_ids.*' => 'required|array',  // Barang ID
 			'serial_number_ids.*.*' => 'required|integer',  // SN ID
 		]);
+
+		// Cek apakah semua serial number yang dipilih unik
+		$allSerialNumbers = collect($validated['serial_number_ids'])->flatten()->toArray();
+		$uniqueSerialNumbers = array_unique($allSerialNumbers);
+
+		if (count($allSerialNumbers) !== count($uniqueSerialNumbers)) {
+			return response()->json(['success' => false, 'message' => 'Terdapat serial number yang sama. Semua serial number harus unik.'], 422);
+		}
 
 		$permintaanBarang = DB::table('permintaan_barang_keluar')
 			->where('id', $validated['permintaan_id'])
