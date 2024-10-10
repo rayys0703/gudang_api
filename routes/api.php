@@ -110,6 +110,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/laporan/stok/{id}', [LaporanController::class, 'stokDetail']);
     Route::get('/laporan/barangmasuk', [LaporanController::class, 'barangmasuk'])->name('laporan.barangmasuk.index');
     Route::get('/laporan/barangkeluar', [LaporanController::class, 'barangkeluar'])->name('laporan.barangkeluar.index');
+    Route::get('/laporan/barangkeluar/{id}', [LaporanController::class, 'getDetailBarangKeluar'])->name('laporan.barangkeluar.getDetailBarangKeluar');
 
 // Route::middleware('auth:sanctum')->post('logout', [AuthController::class, 'logout']);
 // Route::middleware('auth:sanctum')->get('user', [AuthController::class, 'user']);

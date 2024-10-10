@@ -291,7 +291,6 @@ class PermintaanBarangKeluarController extends Controller
 		$request->validate([
 			'id' => 'required|numeric',
 			'status' => 'required|string',
-			'reason' => 'nullable|string'
 		]);
 
 		$permintaan = PermintaanBarangKeluar::findOrFail($request->id);
@@ -312,7 +311,6 @@ class PermintaanBarangKeluarController extends Controller
 
 			} elseif ($request->status === 'Ditolak') {
 				$permintaan->status = $request->status;
-				$permintaan->alasan = $request->reason;
 				$permintaan->save();
 
 				return response()->json([
@@ -424,8 +422,13 @@ class PermintaanBarangKeluarController extends Controller
 					->first();
 
 				if (!$serialNumber) {
-					return response()->json(['success' => false, 'message' => "Serial number $serialNumberId tidak valid atau sudah digunakan."], 400);
+					return response()->json(['success' => false, 'message' => 'Terdapat serial number yang sudah digunakan.'], 404);
 				}
+			}
+
+			// Setelah semua pengecekan selesai, lakukan insert dan update data
+			foreach ($serialNumbers as $serialNumberId) {
+				$serialNumber = DB::table('serial_number')->where('id', $serialNumberId)->first();
 
 				// Insert serial_number_permintaan
 				DB::table('serial_number_permintaan')->insert([
@@ -434,9 +437,9 @@ class PermintaanBarangKeluarController extends Controller
 				]);
 
 				// Update jumlah barang masuk di tabel barang_masuk
-				DB::table('barang_masuk')
-					->where('id', $serialNumber->barangmasuk_id)
-					->decrement('jumlah', 1);
+				// DB::table('barang_masuk')
+				// 	->where('id', $serialNumber->barangmasuk_id)
+				// 	->decrement('jumlah', 1);
 
 				// Tandai serial number sebagai sudah digunakan
 				DB::table('serial_number')
