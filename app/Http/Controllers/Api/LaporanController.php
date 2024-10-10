@@ -93,7 +93,7 @@ class LaporanController extends Controller
 		return datatables($query)->toJson();
 	}
 
-    public function barangkeluar(Request $request)
+    public function barangkeluarDRAFT(Request $request)
     {
         $search = $request->input('search');
         $startDate = $request->input('start_date');
@@ -159,7 +159,7 @@ class LaporanController extends Controller
         ]);
     }
     
-    public function barangkeluarDRAFT(Request $request)
+    public function barangkeluar(Request $request)
     {
         $search = $request->input('search');
         $startDate = $request->input('start_date');
@@ -198,9 +198,26 @@ class LaporanController extends Controller
             ->editColumn('tanggal_akhir', function ($item) {
                 return \Carbon\Carbon::parse($item->tanggal_akhir)->isoFormat('DD MMMM YYYY');
             })
+            ->addColumn('detail', function ($item) {
+                return DB::table('detail_permintaan_bk')
+                    ->leftJoin('serial_number_permintaan', 'detail_permintaan_bk.id', '=', 'serial_number_permintaan.detail_permintaan_bk_id')
+                    ->leftJoin('serial_number', 'serial_number_permintaan.serial_number_id', '=', 'serial_number.id')
+                    ->leftJoin('barang_masuk', 'serial_number.barangmasuk_id', '=', 'barang_masuk.id')
+                    ->leftJoin('barang', 'barang_masuk.barang_id', '=', 'barang.id')
+                    ->leftJoin('jenis_barang', 'barang.jenis_barang_id', '=', 'jenis_barang.id')
+                    ->leftJoin('supplier', 'barang.supplier_id', '=', 'supplier.id')
+                    ->select(
+                        'serial_number.serial_number', 
+                        'barang.nama as nama_barang', 
+                        'jenis_barang.nama as nama_jenis_barang', 
+                        'supplier.nama as nama_supplier'
+                    )
+                    ->where('detail_permintaan_bk.permintaan_barang_keluar_id', $item->permintaan_barang_keluar_id)
+                    ->orderBy('serial_number.serial_number', 'asc')
+                    ->get();
+            })
             ->toJson();
     }
-
     public function getDetailBarangKeluar($permintaan_barang_keluar_id)
     {
         $detail = DB::table('detail_permintaan_bk')

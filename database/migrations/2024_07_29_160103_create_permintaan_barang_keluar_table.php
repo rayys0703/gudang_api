@@ -20,6 +20,7 @@ return new class extends Migration
             $table->date('tanggal_awal');
             $table->date('tanggal_akhir')->nullable();
             $table->enum('status', ['Belum Disetujui', 'Diproses', 'Disetujui', 'Ditolak'])->default('Belum Disetujui');
+            $table->string('alasan')->nullable();
             $table->timestamps();
             $table->unsignedBigInteger('created_by')->nullable();
 

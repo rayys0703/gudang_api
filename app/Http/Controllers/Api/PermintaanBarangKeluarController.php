@@ -265,7 +265,7 @@ class PermintaanBarangKeluarController extends Controller
 			// }
 		}
 
-		return response()->json(['success' => true, 'message' => 'Data berhasil ditambahkan!']);
+		return response()->json(['success' => true, 'message' => 'Berhasil membuat permintaan barang keluar!']);
 	}
 
 	public function delete($id)
@@ -291,6 +291,7 @@ class PermintaanBarangKeluarController extends Controller
 		$request->validate([
 			'id' => 'required|numeric',
 			'status' => 'required|string',
+			'reason' => 'nullable|string'
 		]);
 
 		$permintaan = PermintaanBarangKeluar::findOrFail($request->id);
@@ -311,6 +312,7 @@ class PermintaanBarangKeluarController extends Controller
 
 			} elseif ($request->status === 'Ditolak') {
 				$permintaan->status = $request->status;
+				$permintaan->alasan = $request->reason;
 				$permintaan->save();
 
 				return response()->json([
@@ -329,8 +331,28 @@ class PermintaanBarangKeluarController extends Controller
 	}
 
 	public function selectSN($id)
-    {
-        $serialNumbers = DB::table('detail_permintaan_bk')
+	{
+		$detailPermintaan = DB::table('detail_permintaan_bk')
+			->where('permintaan_barang_keluar_id', $id)
+			->get();
+
+		if ($detailPermintaan->isEmpty()) {
+			return response()->json([
+				'success' => false,
+				'message' => 'Permintaan barang keluar tidak ditemukan'
+			], 404);
+		}
+
+		$permintaan = PermintaanBarangKeluar::findOrFail($id);
+
+		if ($permintaan->status === 'Disetujui' || $permintaan->status === 'Ditolak') {
+			return response()->json([
+				'success' => false,
+				'message' => 'Permintaan barang keluar sudah disetujui atau ditolak'
+			], 404);
+		}
+
+		$serialNumbers = DB::table('detail_permintaan_bk')
 			->join('barang', 'detail_permintaan_bk.barang_id', '=', 'barang.id')
 			->join('barang_masuk', 'barang.id', '=', 'barang_masuk.barang_id')
 			->join('serial_number', 'barang_masuk.id', '=', 'serial_number.barangmasuk_id')
@@ -339,17 +361,24 @@ class PermintaanBarangKeluarController extends Controller
 			->where('serial_number.status', 0)
 			->where('detail_barang_masuk.status_barang_id', 1)
 			->select(DB::raw('ROW_NUMBER() OVER (PARTITION BY barang.nama ORDER BY serial_number.id) AS id'), 
-					'serial_number.id as serial_number_id',
-					'serial_number.serial_number',
-					'barang.id as barang_id', 
-					'barang.nama as nama_barang',
-					'detail_permintaan_bk.jumlah')
+				'serial_number.id as serial_number_id',
+				'serial_number.serial_number',
+				'barang.id as barang_id', 
+				'barang.nama as nama_barang',
+				'detail_permintaan_bk.jumlah')
 			->orderBy('barang.nama', 'asc')
 			->orderBy('serial_number.serial_number', 'asc')
 			->get();
 
-        return response()->json($serialNumbers);
-    }
+		if ($serialNumbers->isEmpty()) {
+			return response()->json([
+				'success' => false,
+				'message' => 'Serial Number tidak ditemukan atau sudah terpakai'
+			], 404);
+		}
+
+		return response()->json($serialNumbers);
+	}
 
 	public function setSN(Request $request)
 	{
@@ -427,7 +456,7 @@ class PermintaanBarangKeluarController extends Controller
 			->where('id', $permintaanBarang->id)
 			->update(['status' => 'Disetujui']);
 
-		return response()->json(['success' => true, 'message' => 'Serial number berhasil disimpan dan barang keluar berhasil diproses.'], 200);
+		return response()->json(['success' => true, 'message' => 'Serial number berhasil disimpan dan barang berhasil dikeluarkan.'], 200);
 	}
 
 }
