@@ -102,7 +102,19 @@ class PermintaanBarangKeluarController extends Controller
 
 	public function create($id = null)
 	{
-		$jenis_barang = DB::table('jenis_barang')->select('id', 'nama')->orderBy('nama', 'asc')->get();
+		$jenis_barang = DB::table('barang_masuk')
+			->join('barang', 'barang_masuk.barang_id', '=', 'barang.id')
+			->join('jenis_barang', 'barang.jenis_barang_id', '=', 'jenis_barang.id')
+			->join('detail_barang_masuk', 'barang_masuk.id', '=', 'detail_barang_masuk.barangmasuk_id')
+			->join('serial_number', 'detail_barang_masuk.serial_number_id', '=', 'serial_number.id')
+			//->where('barang.jenis_barang_id', $id)
+			->where('serial_number.status', false)
+			->where('detail_barang_masuk.status_barang_id', 1)
+			->select('jenis_barang.id', 'jenis_barang.nama')
+			->distinct()
+			->orderBy('jenis_barang.nama', 'asc')
+			->get();
+		// $jenis_barang = DB::table('jenis_barang')->select('id', 'nama')->orderBy('nama', 'asc')->get();
 		$barang = DB::table('barang')
 			->join('jenis_barang', 'barang.jenis_barang_id', '=', 'jenis_barang.id')
 			->select('barang.id', 'barang.nama', 'jenis_barang.nama as jenis_barang_nama')
