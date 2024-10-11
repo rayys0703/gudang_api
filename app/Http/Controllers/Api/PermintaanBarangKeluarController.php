@@ -106,10 +106,12 @@ class PermintaanBarangKeluarController extends Controller
 			->join('barang', 'barang_masuk.barang_id', '=', 'barang.id')
 			->join('jenis_barang', 'barang.jenis_barang_id', '=', 'jenis_barang.id')
 			->join('detail_barang_masuk', 'barang_masuk.id', '=', 'detail_barang_masuk.barangmasuk_id')
+			->join('status_barang', 'detail_barang_masuk.status_barang_id', '=', 'status_barang.id')
 			->join('serial_number', 'detail_barang_masuk.serial_number_id', '=', 'serial_number.id')
 			//->where('barang.jenis_barang_id', $id)
-			->where('serial_number.status', false)
-			->where('detail_barang_masuk.status_barang_id', 1)
+			->where('serial_number.status', false) // Filter SN yang belum digunakan
+			//->where('detail_barang_masuk.status_barang_id', 1) // Filter SN dengan kondisi barang 'Baik'
+			->where('status_barang.nama', 'Baik')
 			->select('jenis_barang.id', 'jenis_barang.nama')
 			->distinct()
 			->orderBy('jenis_barang.nama', 'asc')
@@ -168,10 +170,12 @@ class PermintaanBarangKeluarController extends Controller
 		$barang = DB::table('barang_masuk')
 			->join('barang', 'barang_masuk.barang_id', '=', 'barang.id')
 			->join('detail_barang_masuk', 'barang_masuk.id', '=', 'detail_barang_masuk.barangmasuk_id')
+			->join('status_barang', 'detail_barang_masuk.status_barang_id', '=', 'status_barang.id')
 			->join('serial_number', 'detail_barang_masuk.serial_number_id', '=', 'serial_number.id')
 			->where('barang.jenis_barang_id', $id)
 			->where('serial_number.status', false)
-			->where('detail_barang_masuk.status_barang_id', 1)
+			//->where('detail_barang_masuk.status_barang_id', 1)
+			->where('status_barang.nama', 'Baik')
 			->select('barang.id', 'barang.nama')
 			->distinct()
 			->orderBy('barang.nama', 'asc')
@@ -186,9 +190,11 @@ class PermintaanBarangKeluarController extends Controller
 			->join('barang_masuk', 'serial_number.barangmasuk_id', '=', 'barang_masuk.id')
 			->join('barang', 'barang_masuk.barang_id', '=', 'barang.id')
 			->join('detail_barang_masuk', 'serial_number.id', '=', 'detail_barang_masuk.serial_number_id')
+			->join('status_barang', 'detail_barang_masuk.status_barang_id', '=', 'status_barang.id')
 			->where('barang.id', $barang_id)
 			->where('serial_number.status', false)
-			->where('detail_barang_masuk.status_barang_id', 1)
+			//->where('detail_barang_masuk.status_barang_id', 1)
+			->where('status_barang.nama', 'Baik')
 			->count();
 
 		return response()->json(['stok' => $stok]);
@@ -314,6 +320,7 @@ class PermintaanBarangKeluarController extends Controller
 		$request->validate([
 			'id' => 'required|numeric',
 			'status' => 'required|string',
+			'reason' => 'nullable|string|max:150',
 		]);
 
 		$permintaan = PermintaanBarangKeluar::findOrFail($request->id);
@@ -334,6 +341,7 @@ class PermintaanBarangKeluarController extends Controller
 
 			} elseif ($request->status === 'Ditolak') {
 				$permintaan->status = $request->status;
+				$permintaan->alasan = $request->reason;
 				$permintaan->save();
 
 				return response()->json([
@@ -378,9 +386,11 @@ class PermintaanBarangKeluarController extends Controller
 			->join('barang_masuk', 'barang.id', '=', 'barang_masuk.barang_id')
 			->join('serial_number', 'barang_masuk.id', '=', 'serial_number.barangmasuk_id')
 			->join('detail_barang_masuk', 'serial_number.id', '=', 'detail_barang_masuk.serial_number_id')
+			->join('status_barang', 'detail_barang_masuk.status_barang_id', '=', 'status_barang.id')
 			->where('detail_permintaan_bk.permintaan_barang_keluar_id', $id)
 			->where('serial_number.status', 0)
-			->where('detail_barang_masuk.status_barang_id', 1)
+			//->where('detail_barang_masuk.status_barang_id', 1)
+			->where('status_barang.nama', 'Baik')
 			->select(DB::raw('ROW_NUMBER() OVER (PARTITION BY barang.nama ORDER BY serial_number.id) AS id'), 
 				'serial_number.id as serial_number_id',
 				'serial_number.serial_number',
@@ -445,10 +455,12 @@ class PermintaanBarangKeluarController extends Controller
 				$serialNumber = DB::table('serial_number')
 					->join('barang_masuk', 'serial_number.barangmasuk_id', '=', 'barang_masuk.id')
 					->join('detail_barang_masuk', 'barang_masuk.id', '=', 'detail_barang_masuk.barangmasuk_id')
+					->join('status_barang', 'detail_barang_masuk.status_barang_id', '=', 'status_barang.id')
 					->where('serial_number.id', $serialNumberId)
 					->where('barang_masuk.barang_id', $detail->barang_id)
 					->where('serial_number.status', 0)  // Serial number belum digunakan
-					->where('detail_barang_masuk.status_barang_id', 1)  // Status barang "Baik"
+					//->where('detail_barang_masuk.status_barang_id', 1)  // Status barang "Baik"
+					->where('status_barang.nama', 'Baik')
 					->select('serial_number.*')
 					->first();
 
