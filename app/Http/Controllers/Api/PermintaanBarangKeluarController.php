@@ -125,7 +125,7 @@ class PermintaanBarangKeluarController extends Controller
 			->get();
 		$customer = DB::table('customer')->select('id', 'nama')->orderBy('nama', 'asc')->get();
 		$keperluan = DB::table('keperluan')
-			->select('id', 'nama', 'extend', 'nama_tanggal_akhir')
+			->select('id', 'nama', 'extend', 'nama_tanggal_akhir', 'batas_hari')
 			->orderBy('nama', 'asc')->get();
 
 		$data = [

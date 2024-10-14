@@ -191,6 +191,7 @@ class DatabaseSeeder extends Seeder
                 'jenis_barang_id' => $jenis_barang_id,
                 'nama' => $nama,
                 'supplier_id' => $faker->numberBetween(1, 20),
+                'created_at' => $faker->dateTimeBetween('-7 days', 'now'),
             ];
         }
 
@@ -208,13 +209,13 @@ class DatabaseSeeder extends Seeder
                 'barang_id' => 2,
                 'jumlah' => 1,
                 'tanggal' => '1965-09-30',
-                'created_at' => now(),
+                'created_at' => $faker->dateTimeBetween('-7 days', 'now'),
             ],
             [
                 'barang_id' => 3,
                 'jumlah' => 5,
                 'tanggal' => '2001-09-11',
-                'created_at' => now(),
+                'created_at' => $faker->dateTimeBetween('-7 days', 'now'),
             ],
         ];
 
@@ -379,7 +380,7 @@ class DatabaseSeeder extends Seeder
                 'tanggal_akhir' => now()->addDays(10),
                 'status' => "Ditolak",
                 'alasan' => "Karena tidak ada",
-                'created_at' => now(),
+                'created_at' => $faker->dateTimeBetween('-7 days', 'now'),
             ],
         ];
 
