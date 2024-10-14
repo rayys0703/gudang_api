@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\BarangKeluarController;
 use App\Http\Controllers\Api\KeperluanController;
 use App\Http\Controllers\Api\PermintaanBarangKeluarController;
 use App\Http\Controllers\Api\LaporanController;
+use App\Http\Controllers\Api\SerialNumberController;
 
 /* Autentikasi */
 Route::post('register', [AuthController::class, 'register']);
@@ -29,6 +30,7 @@ Route::middleware('auth:api')->group(function () {
 });
 
     Route::get('dashboard', [DashboardController::class, 'index']);
+    Route::get('/dashboard/daily-activity', [DashboardController::class, 'getDailyActivity']);
     Route::get('/suppliers', [SupplierController::class, 'index']);
     Route::post('/suppliers', [SupplierController::class, 'store']);
     Route::get('/suppliers/{id}', [SupplierController::class, 'edit']);
@@ -111,6 +113,10 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/laporan/barangmasuk', [LaporanController::class, 'barangmasuk'])->name('laporan.barangmasuk.index');
     Route::get('/laporan/barangkeluar', [LaporanController::class, 'barangkeluar'])->name('laporan.barangkeluar.index');
     Route::get('/laporan/barangkeluar/{id}', [LaporanController::class, 'getDetailBarangKeluar'])->name('laporan.barangkeluar.getDetailBarangKeluar');
+
+    Route::get('/serialnumber', [SerialNumberController::class, 'index']);
+    //Route::get('/serialnumber/{id}', [SerialNumberController::class, 'cekByBarang']);
+    Route::get('/serialnumber/{id}', [SerialNumberController::class, 'cekBySN']);
 
 // Route::middleware('auth:sanctum')->post('logout', [AuthController::class, 'logout']);
 // Route::middleware('auth:sanctum')->get('user', [AuthController::class, 'user']);
