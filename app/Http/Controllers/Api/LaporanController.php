@@ -43,9 +43,37 @@ class LaporanController extends Controller
             })
             ->orderBy('barang_masuk.tanggal', 'desc');
 
-        return datatables($query)->toJson();
-    }
+        $data = datatables($query);
 
+        $stokKeseluruhan = DB::table('barang_masuk')
+            ->sum('jumlah');
+
+        $stokPerhari = DB::table('barang_masuk')
+            ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
+                return $query->whereBetween('tanggal', [$startDate, $endDate]);
+            })
+            ->groupBy('tanggal')
+            ->select('tanggal', DB::raw('SUM(jumlah) as jumlah'))
+            ->orderBy('tanggal', 'asc')
+            ->get();
+
+        $cumulativeStok = [];
+        $runningTotal = 0;
+
+        foreach ($stokPerhari as $stok) {
+            $runningTotal += $stok->jumlah;
+            $cumulativeStok[] = [
+                'tanggal' => $stok->tanggal,
+                'jumlah' => $runningTotal
+            ];
+        }
+
+        return $data->with([
+            'stok_keseluruhan' => $stokKeseluruhan,
+            'stok_perhari' => $cumulativeStok
+        ])->toJson();
+    }
+    
     public function stokDetail($barangId)
     {
         $detail = DB::table('detail_barang_masuk')
@@ -187,8 +215,15 @@ class LaporanController extends Controller
                     ->orWhere('barang_keluar.tanggal', 'like', '%' . $search . '%');
             })
             ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
-                return $query->whereBetween('barang_keluar.tanggal', [$startDate, $endDate]);
+                // Convert to proper date format if necessary
+                $start = \Carbon\Carbon::parse($startDate)->startOfDay();
+                $end = \Carbon\Carbon::parse($endDate)->endOfDay();
+    
+                return $query->whereBetween('barang_keluar.tanggal', [$start, $end]);
             })
+            // ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
+            //     return $query->whereBetween('barang_keluar.tanggal', [$startDate, $endDate]);
+            // })
             ->orderBy('barang_keluar.created_at', 'desc');
 
         return datatables($query)

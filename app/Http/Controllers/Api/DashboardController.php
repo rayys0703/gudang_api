@@ -135,13 +135,31 @@ class DashboardController extends Controller
         // Ambil barang masuk
         $barangMasuk = DB::table('serial_number')
             ->join('barang_masuk', 'serial_number.barangmasuk_id', '=', 'barang_masuk.id')
+            ->join('barang', 'barang_masuk.barang_id', '=', 'barang.id')
             ->where('barang_masuk.created_at', '>=', now()->subDay())
             ->get()
-            ->map(function ($item) {
+            ->groupBy(function ($item) {
+                return Carbon::parse($item->created_at)->format('H:i');
+            })
+            ->map(function ($group) {
+                $barangGrouped = [];
+                foreach ($group as $item) {
+                    $namaBarang = $item->nama;
+                    if (!isset($barangGrouped[$namaBarang])) {
+                        $barangGrouped[$namaBarang] = [];
+                    }
+                    $barangGrouped[$namaBarang][] = $item->serial_number;
+                }
+
+                $description = '+'. count($group) . ' Barang Masuk: ';
+                $details = [];
+                foreach ($barangGrouped as $namaBarang => $serialNumbers) {
+                    $details[] = $namaBarang . ' (SN: ' . implode(', ', $serialNumbers) . ')';
+                }
                 return [
-                    'time' => Carbon::parse($item->created_at)->format('H:i'),
+                    'time' => Carbon::parse($group->first()->created_at)->format('H:i'),
                     'badge_color' => 'bg-success',
-                    'description' => '+1 Barang Masuk', // dengan SN: ' . $item->serial_number
+                    'description' => $description . implode(', ', $details)
                 ];
             });
 
@@ -159,14 +177,80 @@ class DashboardController extends Controller
                     'description' => '+1 Data Barang: ' . $item->nama
                 ];
             });
+
         // Menggabungkan semua aktivitas
         $activities = collect($activities)->merge($permintaan)
-                                          ->merge($barangMasuk)
-                                          ->merge($detailBarangMasuk);
+                                        ->merge($barangMasuk)
+                                        ->merge($detailBarangMasuk);
 
         // Urutkan berdasarkan waktu
         $activities = $activities->sortByDesc('time')->values()->all();
 
-        return response()->json($activities);
+        // Gabungkan aktivitas yang sama (berdasarkan waktu dan deskripsi)
+        $groupedActivities = [];
+        foreach ($activities as $activity) {
+            $time = $activity['time'];
+            $description = $activity['description'];
+
+            // Cek apakah ini adalah Data Barang
+            if (strpos($description, '+1 Data Barang:') !== false) {
+                $barangName = str_replace('+1 Data Barang: ', '', $description);
+                $key = $time . '-Data Barang';
+                if (isset($groupedActivities[$key])) {
+                    // Jika sudah ada di grup, tambahkan nama barang ke dalam list
+                    $groupedActivities[$key]['barang_list'][] = $barangName;
+                } else {
+                    // Jika belum ada, buat entri baru
+                    $groupedActivities[$key] = [
+                        'time' => $time,
+                        'badge_color' => $activity['badge_color'],
+                        'barang_list' => [$barangName],
+                    ];
+                }
+            } else {
+                // Untuk aktivitas selain Data Barang
+                $key = $time . '-' . $description;
+                if (isset($groupedActivities[$key])) {
+                    // Jika aktivitas dengan waktu dan deskripsi yang sama ada, tambahkan count
+                    $groupedActivities[$key]['count'] += 1;
+                } else {
+                    // Jika belum ada, tambahkan sebagai aktivitas baru
+                    $groupedActivities[$key] = [
+                        'time' => $time,
+                        'badge_color' => $activity['badge_color'],
+                        'description' => $description,
+                        'count' => 1
+                    ];
+                }
+            }
+        }
+
+        $finalActivities = [];
+        foreach ($groupedActivities as $activity) {
+            if (isset($activity['barang_list'])) {
+                // Jika ini adalah Data Barang, gabungkan nama barang
+                $finalActivities[] = [
+                    'time' => $activity['time'],
+                    'badge_color' => $activity['badge_color'],
+                    'description' => '+' . count($activity['barang_list']) . ' Data Barang: ' . implode(', ', $activity['barang_list']),
+                ];
+            } else {
+                // Jika ini adalah aktivitas lain, cek apakah perlu menambahkan jumlah
+                if ($activity['count'] > 1) {
+                    $description = '+' . $activity['count'] . ' ' . ltrim($activity['description'], '+1');
+                } else {
+                    $description = $activity['description'];
+                }
+                $finalActivities[] = [
+                    'time' => $activity['time'],
+                    'badge_color' => $activity['badge_color'],
+                    'description' => $description,
+                ];
+            }
+        }
+
+        // Kembalikan hasil dalam format JSON
+        return response()->json($finalActivities);
     }
+
 }
