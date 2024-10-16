@@ -126,7 +126,7 @@ class DashboardController extends Controller
 
         // Ambil permintaan barang keluar
         $permintaan = DB::table('permintaan_barang_keluar')
-            ->where('created_at', '>=', now()->subDay())
+            ->whereDate('created_at', today())
             ->get()
             ->map(function ($item) {
                 return [
@@ -140,10 +140,11 @@ class DashboardController extends Controller
         $barangMasuk = DB::table('serial_number')
             ->join('barang_masuk', 'serial_number.barangmasuk_id', '=', 'barang_masuk.id')
             ->join('barang', 'barang_masuk.barang_id', '=', 'barang.id')
-            ->where('barang_masuk.created_at', '>=', now()->subDay())
+            ->whereDate('barang_masuk.created_at', today())
+            ->select('barang_masuk.created_at as bm_created_at', 'barang.nama', 'serial_number.serial_number')
             ->get()
             ->groupBy(function ($item) {
-                return Carbon::parse($item->created_at)->format('H:i');
+                return Carbon::parse($item->bm_created_at)->format('H:i');
             })
             ->map(function ($group) {
                 $barangGrouped = [];
@@ -161,18 +162,15 @@ class DashboardController extends Controller
                     $details[] = $namaBarang . ' (SN: ' . implode(', ', $serialNumbers) . ')';
                 }
                 return [
-                    'time' => Carbon::parse($group->first()->created_at)->format('H:i'),
+                    'time' => Carbon::parse($group->first()->bm_created_at)->format('H:i'),
                     'badge_color' => 'bg-success',
                     'description' => $description . implode(', ', $details)
                 ];
-            });
-
+            });        
+            
         // Ambil detail barang masuk
-        $detailBarangMasuk = DB::table('detail_barang_masuk')
-            ->join('barang_masuk', 'detail_barang_masuk.barangmasuk_id', '=', 'barang_masuk.id')
-            ->join('barang', 'barang_masuk.barang_id', '=', 'barang.id')
-            ->where('detail_barang_masuk.created_at', '>=', now()->subDay())
-            ->select('detail_barang_masuk.*', 'barang.nama')
+        $detailBarangMasuk = DB::table('barang')
+            ->whereDate('created_at', today())
             ->get()
             ->map(function ($item) {
                 return [
@@ -181,6 +179,21 @@ class DashboardController extends Controller
                     'description' => '+1 Data Barang: ' . $item->nama
                 ];
             });
+            
+        // // Ambil detail barang masuk
+        // $detailBarangMasuk = DB::table('barang')
+        //     ->join('barang_masuk', 'detail_barang_masuk.barangmasuk_id', '=', 'barang_masuk.id')
+        //     ->join('barang', 'barang_masuk.barang_id', '=', 'barang.id')
+        //     ->whereDate('detail_barang_masuk.created_at', today())
+        //     ->select('detail_barang_masuk.*', 'barang.nama')
+        //     ->get()
+        //     ->map(function ($item) {
+        //         return [
+        //             'time' => Carbon::parse($item->created_at)->format('H:i'),
+        //             'badge_color' => 'bg-warning',
+        //             'description' => '+1 Data Barang: ' . $item->nama
+        //         ];
+        //     });
 
         // Menggabungkan semua aktivitas
         $activities = collect($activities)->merge($permintaan)

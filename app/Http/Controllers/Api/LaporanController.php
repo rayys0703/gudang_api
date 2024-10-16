@@ -48,6 +48,14 @@ class LaporanController extends Controller
         $stokKeseluruhan = DB::table('barang_masuk')
             ->sum('jumlah');
 
+        // If start_date and end_date are not provided, set default values
+        if (!$startDate) {
+            $startDate = now()->subDays(7)->format('Y-m-d');
+        }
+        if (!$endDate) {
+            $endDate = now()->format('Y-m-d');
+        }
+
         // 1. Inisialisasi running total dengan total stok sebelum $startDate
         $initialTotal = DB::table('barang_masuk')
         ->where('tanggal', '<', $startDate)
@@ -80,6 +88,50 @@ class LaporanController extends Controller
             'jumlah' => $runningTotal
         ];
         }
+
+        // // 1. Inisialisasi running total dengan total stok sebelum $startDate
+        // $initialTotal = DB::table(DB::raw('(SELECT DISTINCT detail_barang_masuk.barangmasuk_id FROM detail_barang_masuk) AS unique_barangmasuk'))
+        // ->join('barang_masuk', 'unique_barangmasuk.barangmasuk_id', '=', 'barang_masuk.id')
+        // ->where('barang_masuk.tanggal', '<=', $startDate)
+        // ->sum('barang_masuk.jumlah');
+
+        // // 2. Menghasilkan daftar semua tanggal dari $startDate hingga $endDate
+        // $stokPerhari = DB::table(DB::raw('(WITH RECURSIVE all_dates AS (
+        // SELECT "' . $startDate . '" AS tanggal
+        // UNION ALL
+        // SELECT DATE_ADD(tanggal, INTERVAL 1 DAY)
+        // FROM all_dates
+        // WHERE tanggal < "' . $endDate . '"
+        // )
+        // SELECT ad.tanggal, COALESCE(SUM(bm.jumlah), 0) AS total_jumlah
+        // FROM all_dates ad
+        // LEFT JOIN (
+        // SELECT DISTINCT detail_barang_masuk.barangmasuk_id, barang_masuk.jumlah, barang_masuk.tanggal
+        // FROM detail_barang_masuk
+        // JOIN barang_masuk ON detail_barang_masuk.barangmasuk_id = barang_masuk.id
+        // WHERE EXISTS (
+        //     SELECT 1
+        //     FROM serial_number
+        //     WHERE serial_number.barangmasuk_id = barang_masuk.id
+        //     AND serial_number.status = 0
+        // )
+        // ) AS bm ON ad.tanggal = bm.tanggal
+        // GROUP BY ad.tanggal
+        // ORDER BY ad.tanggal ASC) AS stok_perhari'))
+        // ->select('tanggal', 'total_jumlah')
+        // ->get();
+        
+        // // 3. Menghitung stok kumulatif
+        // $cumulativeStok = [];
+        // $runningTotal = $initialTotal;
+
+        // foreach ($stokPerhari as $stok) {
+        // $runningTotal += $stok->total_jumlah;
+        // $cumulativeStok[] = [
+        //     'tanggal' => $stok->tanggal,
+        //     'jumlah' => $runningTotal
+        // ];
+        // }
 
         return $data->with([
             'stok_keseluruhan' => $stokKeseluruhan,
