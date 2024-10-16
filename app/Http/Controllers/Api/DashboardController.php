@@ -28,9 +28,11 @@ class DashboardController extends Controller
             ->keyBy('date');
 
         // Query untuk barang masuk 7 hari terakhir
-        $counts_barang_masuk = DB::table('barang_masuk')
-            ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as count'))
-            ->whereBetween('created_at', [Carbon::now()->subDays(6), Carbon::now()])
+        $counts_barang_masuk = DB::table('serial_number')
+            ->join('barang_masuk', 'serial_number.barangmasuk_id', '=', 'barang_masuk.id')
+            ->join('barang', 'barang_masuk.barang_id', '=', 'barang.id')
+            ->select(DB::raw('DATE(barang_masuk.tanggal) as date'), DB::raw('COUNT(*) as count'))
+            ->whereBetween('barang_masuk.tanggal', [Carbon::now()->subDays(6), Carbon::now()])
             ->groupBy('date')
             ->orderBy('date', 'DESC')
             ->get()
@@ -61,9 +63,11 @@ class DashboardController extends Controller
         }
 
         // Query untuk barang masuk 6 bulan terakhir
-        $counts_barang_masuk_6months = DB::table('barang_masuk')
-            ->select(DB::raw('DATE_FORMAT(tanggal, "%Y-%m") as month'), DB::raw('COUNT(*) as count'))
-            ->whereBetween('tanggal', [Carbon::now()->subMonths(5)->startOfMonth(), Carbon::now()->endOfMonth()])
+        $counts_barang_masuk_6months = DB::table('serial_number')
+            ->join('barang_masuk', 'serial_number.barangmasuk_id', '=', 'barang_masuk.id')
+            ->join('barang', 'barang_masuk.barang_id', '=', 'barang.id')
+            ->select(DB::raw('DATE_FORMAT(barang_masuk.tanggal, "%Y-%m") as month'), DB::raw('COUNT(*) as count'))
+            ->whereBetween('barang_masuk.tanggal', [Carbon::now()->subMonths(5)->startOfMonth(), Carbon::now()->endOfMonth()])
             ->groupBy('month')
             ->orderBy('month', 'DESC')
             ->get()

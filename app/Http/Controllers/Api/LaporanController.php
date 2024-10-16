@@ -48,24 +48,37 @@ class LaporanController extends Controller
         $stokKeseluruhan = DB::table('barang_masuk')
             ->sum('jumlah');
 
-        $stokPerhari = DB::table('barang_masuk')
-            ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
-                return $query->whereBetween('tanggal', [$startDate, $endDate]);
-            })
-            ->groupBy('tanggal')
-            ->select('tanggal', DB::raw('SUM(jumlah) as jumlah'))
-            ->orderBy('tanggal', 'asc')
-            ->get();
+        // 1. Inisialisasi running total dengan total stok sebelum $startDate
+        $initialTotal = DB::table('barang_masuk')
+        ->where('tanggal', '<', $startDate)
+        ->sum('jumlah');
 
+        // 2. Menghasilkan daftar semua tanggal dari $startDate hingga $endDate
+        $stokPerhari = DB::table(DB::raw('(WITH RECURSIVE all_dates AS (
+        SELECT "' . $startDate . '" AS tanggal
+        UNION ALL
+        SELECT DATE_ADD(tanggal, INTERVAL 1 DAY)
+        FROM all_dates
+        WHERE tanggal < "' . $endDate . '"
+        )
+        SELECT ad.tanggal, COALESCE(SUM(bm.jumlah), 0) AS total_jumlah
+        FROM all_dates ad
+        LEFT JOIN barang_masuk bm ON ad.tanggal = bm.tanggal
+        GROUP BY ad.tanggal
+        ORDER BY ad.tanggal ASC) AS stok_perhari'))
+        ->select('tanggal', 'total_jumlah')
+        ->get();
+
+        // 3. Menghitung stok kumulatif
         $cumulativeStok = [];
-        $runningTotal = 0;
+        $runningTotal = $initialTotal;
 
         foreach ($stokPerhari as $stok) {
-            $runningTotal += $stok->jumlah;
-            $cumulativeStok[] = [
-                'tanggal' => $stok->tanggal,
-                'jumlah' => $runningTotal
-            ];
+        $runningTotal += $stok->total_jumlah;
+        $cumulativeStok[] = [
+            'tanggal' => $stok->tanggal,
+            'jumlah' => $runningTotal
+        ];
         }
 
         return $data->with([
