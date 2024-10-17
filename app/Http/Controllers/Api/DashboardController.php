@@ -160,7 +160,7 @@ class DashboardController extends Controller
         $barangKeluar = DB::table('detail_permintaan_bk')
             ->join('permintaan_barang_keluar', 'detail_permintaan_bk.permintaan_barang_keluar_id', '=', 'permintaan_barang_keluar.id')
             ->join('customer', 'permintaan_barang_keluar.customer_id', '=', 'customer.id')
-            ->join('keperluan', 'permintaan_barang_keluar.keperluan_id', '=', 'keperluan.id')
+            //->join('keperluan', 'permintaan_barang_keluar.keperluan_id', '=', 'keperluan.id')
             ->join('serial_number_permintaan', 'detail_permintaan_bk.id', '=', 'serial_number_permintaan.detail_permintaan_bk_id')
             ->join('serial_number', 'serial_number_permintaan.serial_number_id', '=', 'serial_number.id')
             ->join('barang_masuk', 'serial_number.barangmasuk_id', '=', 'barang_masuk.id')
@@ -174,7 +174,7 @@ class DashboardController extends Controller
                 'jenis_barang.nama as nama_jenis_barang', 
                 'supplier.nama as nama_supplier',
                 'customer.nama as nama_customer',
-                'keperluan.nama as nama_keperluan',
+                //'keperluan.nama as nama_keperluan',
                 'permintaan_barang_keluar.updated_at as tanggal_permintaan',
             )
             ->get()
