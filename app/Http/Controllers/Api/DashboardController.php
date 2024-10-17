@@ -146,6 +146,10 @@ class DashboardController extends Controller
             'total_barang_masuk' => $total_barang_masuk,
             'total_barang_keluar' => $total_barang_keluar,
             'total_permintaan' => $total_permintaan,
+
+            'permintaan_ditolak' => DB::table('permintaan_barang_keluar')->where('status', 'Ditolak')->count(),
+            'permintaan_diterima' => DB::table('permintaan_barang_keluar')->where('status', 'Disetujui')->count(),
+            'permintaan_pending' => DB::table('permintaan_barang_keluar')->where('status', 'Belum Disetujui')->count(),
         ];
 
         // Mengirim data sebagai JSON
