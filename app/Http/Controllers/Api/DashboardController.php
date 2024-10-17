@@ -67,8 +67,8 @@ class DashboardController extends Controller
 
         // Query untuk barang keluar 7 hari terakhir
         $counts_barang_keluar = DB::table('detail_permintaan_bk')
-            ->leftJoin('permintaan_barang_keluar', 'detail_permintaan_bk.permintaan_barang_keluar_id', '=', 'permintaan_barang_keluar.id')
-            ->leftJoin('barang_keluar', 'detail_permintaan_bk.permintaan_barang_keluar_id', '=', 'barang_keluar.permintaan_id')
+            ->join('permintaan_barang_keluar', 'detail_permintaan_bk.permintaan_barang_keluar_id', '=', 'permintaan_barang_keluar.id')
+            ->join('barang_keluar', 'detail_permintaan_bk.permintaan_barang_keluar_id', '=', 'barang_keluar.permintaan_id')
             ->select(DB::raw('DATE(permintaan_barang_keluar.created_at) as date'), DB::raw('SUM(detail_permintaan_bk.jumlah) as count'))
             ->whereBetween('permintaan_barang_keluar.created_at', [Carbon::now()->subDays(6), Carbon::now()])
             ->groupBy('date')
@@ -104,8 +104,8 @@ class DashboardController extends Controller
 
         // Query untuk barang keluar 6 bulan terakhir
         $counts_barang_keluar_6months = DB::table('detail_permintaan_bk')
-            ->leftJoin('permintaan_barang_keluar', 'detail_permintaan_bk.permintaan_barang_keluar_id', '=', 'permintaan_barang_keluar.id')
-            ->leftJoin('barang_keluar', 'detail_permintaan_bk.permintaan_barang_keluar_id', '=', 'barang_keluar.permintaan_id')
+            ->join('permintaan_barang_keluar', 'detail_permintaan_bk.permintaan_barang_keluar_id', '=', 'permintaan_barang_keluar.id')
+            ->join('barang_keluar', 'detail_permintaan_bk.permintaan_barang_keluar_id', '=', 'barang_keluar.permintaan_id')
             ->select(DB::raw('DATE_FORMAT(permintaan_barang_keluar.created_at, "%Y-%m") as month'), DB::raw('SUM(detail_permintaan_bk.jumlah) as count'))
             ->whereBetween('tanggal', [Carbon::now()->subMonths(5)->startOfMonth(), Carbon::now()->endOfMonth()])
             ->groupBy('month')
@@ -115,8 +115,8 @@ class DashboardController extends Controller
 
         // Mengambil total untuk setiap kategori
         $total_barang = DB::table('barang')->count();
-        $total_barang_masuk = DB::table('barang_masuk')->count();
-        $total_barang_keluar = DB::table('barang_keluar')->count();
+        $total_barang_masuk = DB::table('detail_barang_masuk')->count();
+        $total_barang_keluar = DB::table('serial_number_permintaan')->count();
         $total_permintaan = DB::table('permintaan_barang_keluar')->count();
 
         // Menyusun array hasil untuk setiap kategori
@@ -158,7 +158,7 @@ class DashboardController extends Controller
 
         // Ambil barang keluar
         $barangKeluar = DB::table('detail_permintaan_bk')
-            ->leftJoin('permintaan_barang_keluar', 'detail_permintaan_bk.permintaan_barang_keluar_id', '=', 'permintaan_barang_keluar.id')
+            ->join('permintaan_barang_keluar', 'detail_permintaan_bk.permintaan_barang_keluar_id', '=', 'permintaan_barang_keluar.id')
             ->join('customer', 'permintaan_barang_keluar.customer_id', '=', 'customer.id')
             ->join('keperluan', 'permintaan_barang_keluar.keperluan_id', '=', 'keperluan.id')
             ->join('serial_number_permintaan', 'detail_permintaan_bk.id', '=', 'serial_number_permintaan.detail_permintaan_bk_id')
