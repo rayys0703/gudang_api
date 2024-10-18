@@ -195,15 +195,17 @@ class DashboardController extends Controller
                     $barangGrouped[$namaBarang][] = $item->serial_number;
                 }
 
-                $description = ''. count($group) . ' Barang Keluar: ';
+                $description = ''. count($group) . ' Barang Keluar:';
                 $details = [];
                 foreach ($barangGrouped as $namaBarang => $serialNumbers) {
-                    $details[] = $namaBarang . ' (SN: ' . implode(', ', $serialNumbers) . ')';
+                    //$details[] = $namaBarang . ' (SN: ' . implode(', ', $serialNumbers) . ')';
+                    $details[] = "\n- " . $namaBarang . ' (SN: ' . implode(', ', $serialNumbers) . ')';
                 }
                 return [
                     'time' => Carbon::parse($group->first()->tanggal_permintaan)->format('H:i'),
                     'badge_color' => 'bg-danger',
-                    'description' => $description . implode(', ', $details)
+                    //'description' => $description . implode(', ', $details)
+                    'description' => $description . implode('', $details)
                 ];
             });      
 
@@ -242,15 +244,16 @@ class DashboardController extends Controller
                     $barangGrouped[$namaBarang][] = $item->serial_number;
                 }
 
-                $description = ''. count($group) . ' Barang Masuk: ';
+
+                $description = ''. count($group) . ' Barang Masuk:';
                 $details = [];
                 foreach ($barangGrouped as $namaBarang => $serialNumbers) {
-                    $details[] = $namaBarang . ' (SN: ' . implode(', ', $serialNumbers) . ')';
+                    $details[] = "\n- " . $namaBarang . ' (SN: ' . implode(', ', $serialNumbers) . ')';
                 }
                 return [
                     'time' => Carbon::parse($group->first()->bm_created_at)->format('H:i'),
                     'badge_color' => 'bg-success',
-                    'description' => $description . implode(', ', $details)
+                    'description' => $description . implode('', $details)
                 ];
             });        
 
