@@ -420,7 +420,7 @@ class PermintaanBarangKeluarController extends Controller
 			'serial_number_ids.*.*' => 'required|integer',  // SN ID
 		]);
 
-		// Cek apakah semua serial number yang dipilih unik
+		// Cek apakah semua serial number yang dipilih adalah unik
 		$allSerialNumbers = collect($validated['serial_number_ids'])->flatten()->toArray();
 		$uniqueSerialNumbers = array_unique($allSerialNumbers);
 
