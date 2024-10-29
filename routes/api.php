@@ -19,14 +19,20 @@ use App\Http\Controllers\Api\PermintaanBarangKeluarController;
 use App\Http\Controllers\Api\LaporanController;
 use App\Http\Controllers\Api\SerialNumberController;
 
+use App\Http\Controllers\Api\RegisterController;
+Route::controller(RegisterController::class)->group(function(){
+    Route::post('register', 'register');
+    Route::post('login', 'login');
+});
+
 /* Autentikasi */
-Route::post('register', [AuthController::class, 'register']);
-Route::post('login', [AuthController::class, 'login']);
-Route::post('logout', [AuthController::class, 'logout']);
-Route::middleware('auth:api')->get('me', [AuthController::class, 'me']);
+// Route::post('register', [AuthController::class, 'register']);
+// Route::post('login', [AuthController::class, 'login']);
+// Route::post('logout', [AuthController::class, 'logout']);
+// Route::middleware('auth:api')->get('me', [AuthController::class, 'me']);
 
 /* Perlu Login */
-Route::middleware('auth:api')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
 });
 
     Route::get('dashboard', [DashboardController::class, 'index']);
@@ -111,6 +117,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/laporan/stok', [LaporanController::class, 'stok']);
     Route::get('/laporan/stok/{id}', [LaporanController::class, 'stokDetail']);
     Route::get('/laporan/barangmasuk', [LaporanController::class, 'barangmasuk'])->name('laporan.barangmasuk.index');
+    Route::get('/laporan/barangmasuk/{id}', [LaporanController::class, 'getDetailBarangMasuk'])->name('laporan.barangmasuk.getDetailBarangMasuk');
     Route::get('/laporan/barangkeluar', [LaporanController::class, 'barangkeluar'])->name('laporan.barangkeluar.index');
     Route::get('/laporan/barangkeluar/{id}', [LaporanController::class, 'getDetailBarangKeluar'])->name('laporan.barangkeluar.getDetailBarangKeluar');
 
