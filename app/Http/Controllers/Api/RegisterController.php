@@ -45,15 +45,37 @@ class RegisterController extends BaseController
      */
     public function login(Request $request): JsonResponse
     {
-        if(Auth::attempt(['email' => $request->email, 'password' => $request->password])){ 
+        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) { 
             $user = Auth::user(); 
-            $success['token'] =  $user->createToken('MyApp')->plainTextToken; 
-            $success['name'] =  $user->name;
-   
+            $success['token'] = $user->createToken('MyApp')->plainTextToken; 
+            $success['name'] = $user->name;
+            
+            // Mengambil daftar permissions berdasarkan role user
+            $permissions = $user->getAllPermissions()->pluck('name')->toArray();
+            $success['permissions'] = $permissions;
+
             return $this->sendResponse($success, 'User login successfully.');
-        } 
-        else{ 
-            return $this->sendError('Unauthorised.', ['error'=>'Unauthorised']);
+        } else { 
+            return $this->sendError('Unauthorised.', ['error' => 'Unauthorised']);
         } 
     }
+
+    public function getUserData(Request $request)
+    {
+        $user = $request->user()->load(['roles', 'roles.permissions']);
+
+        // Menyusun daftar permissions unik yang dimiliki user berdasarkan role
+        $permissions = $user->roles->flatMap(function ($role) {
+            return $role->permissions->pluck('name');
+        })->unique();
+
+        return response()->json([
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'roles' => $user->roles->pluck('name'), // Mengambil nama role
+            'permissions' => $permissions->values(), // Mengambil nama permission secara unik
+        ]);
+    }
+
 }

@@ -396,8 +396,7 @@ class BarangMasukController extends Controller
 			'kelengkapans.max' => 'Kelengkapan tidak boleh lebih dari 255 karakter.',
 		]); 
 
-		$namaBarang = DB::table('barang')->where('id', $request->barang_id)->value('nama');
-		$statusBarangIds = DB::table('status_barang')->whereIn('nama', $request->status_barangs)->pluck('id')->toArray();
+		$request->barang_id = DB::table('barang')->where('nama', $request->barang_id)->value('id');
 
 		$existingSerialNumbers = SerialNumber::whereIn('serial_number', $request->serial_numbers)->pluck('serial_number')->toArray();
 
@@ -413,6 +412,8 @@ class BarangMasukController extends Controller
 		]);
 
 		foreach ($request->serial_numbers as $index => $serialNumber) {
+			$statusBarangId = DB::table('status_barang')->where('nama', $request->status_barangs[$index])->value('id');
+
 			$serial = SerialNumber::create([
 				'serial_number' => $serialNumber,
 				'barangmasuk_id' => $barangMasuk->id,
@@ -421,7 +422,7 @@ class BarangMasukController extends Controller
 			DetailBarangMasuk::create([
 				'barangmasuk_id' => $barangMasuk->id,
 				'serial_number_id' => $serial->id,
-				'status_barang_id' => $request->status_barangs[$index],
+				'status_barang_id' => $statusBarangId,
 				'kelengkapan' => $request->kelengkapans[$index],
 			]);
 		}

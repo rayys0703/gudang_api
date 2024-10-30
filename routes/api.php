@@ -18,12 +18,17 @@ use App\Http\Controllers\Api\KeperluanController;
 use App\Http\Controllers\Api\PermintaanBarangKeluarController;
 use App\Http\Controllers\Api\LaporanController;
 use App\Http\Controllers\Api\SerialNumberController;
+use App\Http\Controllers\Api\RoleController;
 
 use App\Http\Controllers\Api\RegisterController;
 Route::controller(RegisterController::class)->group(function(){
     Route::post('register', 'register');
     Route::post('login', 'login');
 });
+Route::middleware(['auth:sanctum'])->get('/user', [RegisterController::class, 'getUserData']);
+
+Route::resource('roles', RoleController::class);
+Route::put('/roles/assign/{user}', [RoleController::class, 'assignRole'])->name('roles.assign');
 
 /* Autentikasi */
 // Route::post('register', [AuthController::class, 'register']);

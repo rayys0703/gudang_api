@@ -202,19 +202,19 @@ class DatabaseSeeder extends Seeder
             [
                 'barang_id' => 1,
                 'jumlah' => 3,
-                'tanggal' => '1945-08-17',
+                'tanggal' => $faker->dateTimeBetween('-3 days', 'now'),
                 'created_at' => now(),
             ],
             [
                 'barang_id' => 2,
                 'jumlah' => 1,
-                'tanggal' => '1965-09-30',
+                'tanggal' => $faker->dateTimeBetween('-5 days', 'now'),
                 'created_at' => $faker->dateTimeBetween('-7 days', 'now'),
             ],
             [
                 'barang_id' => 3,
                 'jumlah' => 5,
-                'tanggal' => '2001-09-11',
+                'tanggal' => $faker->dateTimeBetween('-6 days', 'now'),
                 'created_at' => $faker->dateTimeBetween('-7 days', 'now'),
             ],
         ];
@@ -408,5 +408,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         DB::table('detail_permintaan_bk')->insert($detail_permintaan_bk);
+
+        $this->call(RolePermissionSeeder::class);
     }
 }

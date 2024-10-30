@@ -91,7 +91,7 @@ class DashboardController extends Controller
             $months->push(Carbon::today()->startOfMonth()->subMonths($i)->format('Y-m'));
         }
 
-        // SQL barang masuk 6 bulan terakhir
+        // Query untuk barang masuk 6 bulan terakhir
         $counts_barang_masuk_6months = DB::table('serial_number')
             ->join('barang_masuk', 'serial_number.barangmasuk_id', '=', 'barang_masuk.id')
             ->join('barang', 'barang_masuk.barang_id', '=', 'barang.id')
@@ -102,7 +102,7 @@ class DashboardController extends Controller
             ->get()
             ->keyBy('month');
 
-        // SQL barang keluar 6 bulan terakhir
+        // Query untuk barang keluar 6 bulan terakhir
         $counts_barang_keluar_6months = DB::table('detail_permintaan_bk')
             ->join('permintaan_barang_keluar', 'detail_permintaan_bk.permintaan_barang_keluar_id', '=', 'permintaan_barang_keluar.id')
             ->join('barang_keluar', 'detail_permintaan_bk.permintaan_barang_keluar_id', '=', 'barang_keluar.permintaan_id')
