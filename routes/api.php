@@ -105,6 +105,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/customers/delete-selected', [CustomerController::class, 'deleteSelected']);
 
     Route::get('/permintaanbarangkeluar', [PermintaanBarangKeluarController::class, 'index']);
+    Route::get('/permintaanbarangkeluar/onlyfor/{user_id}', [PermintaanBarangKeluarController::class, 'indexForOneUser']);
     Route::get('/permintaanbarangkeluar/create', [PermintaanBarangKeluarController::class, 'create']);
     Route::get('/permintaanbarangkeluar/get-by-jenis/{id}', [PermintaanBarangKeluarController::class, 'getBarangByJenis']);
     Route::get('/permintaanbarangkeluar/get-by-barang/{id}', [PermintaanBarangKeluarController::class, 'getSerialNumberByBarang']);

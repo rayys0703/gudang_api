@@ -33,10 +33,51 @@ class PermintaanBarangKeluarController extends Controller
 				'permintaan_barang_keluar.id as permintaan_barang_keluar_id',
 				'permintaan_barang_keluar.jumlah as jumlah_permintaan',
 				'keperluan.extend as extend',
-				//DB::raw("REPLACE(keperluan.nama_tanggal_awal, 'Tanggal ', '') as nama_tanggal_awal"),
 				DB::raw("REPLACE(keperluan.nama_tanggal_akhir, 'Tanggal ', '') as nama_tanggal_akhir"),
 				DB::raw("DATE_FORMAT(permintaan_barang_keluar.tanggal_awal, '%d %b %Y') as tanggal_awal_permintaan"),
 				DB::raw("DATE_FORMAT(permintaan_barang_keluar.tanggal_akhir, '%d %b %Y') as tanggal_akhir_permintaan")			)
+			->orderBy('permintaan_barang_keluar.created_at', 'desc')
+			->orderBy('permintaan_barang_keluar.status', 'asc');
+
+		if ($search) {
+			$query->where(function($q) use ($search) {
+				$q->where('customer.nama', 'like', '%' . $search . '%')
+					->orWhere('keperluan.nama', 'like', '%' . $search . '%')
+					->orWhere('permintaan_barang_keluar.jumlah', 'like', '%' . $search . '%')
+					->orWhere('permintaan_barang_keluar.status', 'like', '%' . $search . '%')
+					->orWhere('permintaan_barang_keluar.tanggal_awal', 'like', '%' . $search . '%');
+			});
+		}
+
+		return DataTables::of($query)
+			->editColumn('tanggal_awal', function ($item) {
+				return \Carbon\Carbon::parse($item->tanggal_awal_permintaan)->isoFormat('D MMMM YYYY');
+			})
+			->editColumn('tanggal_akhir', function ($item) {
+				return \Carbon\Carbon::parse($item->tanggal_akhir_permintaan)->isoFormat('D MMMM YYYY');
+			})
+			->toJson();
+	}
+
+	public function indexForOneUser(Request $request, $user_id)
+	{
+		$search = $request->input('search.value');
+
+		$query = DB::table('permintaan_barang_keluar')
+			->leftJoin('customer', 'permintaan_barang_keluar.customer_id', '=', 'customer.id')
+			->leftJoin('keperluan', 'permintaan_barang_keluar.keperluan_id', '=', 'keperluan.id')
+			->select(
+				'permintaan_barang_keluar.*',
+				'customer.nama as nama_customer',
+				'keperluan.nama as nama_keperluan',
+				'permintaan_barang_keluar.id as permintaan_barang_keluar_id',
+				'permintaan_barang_keluar.jumlah as jumlah_permintaan',
+				'keperluan.extend as extend',
+				DB::raw("REPLACE(keperluan.nama_tanggal_akhir, 'Tanggal ', '') as nama_tanggal_akhir"),
+				DB::raw("DATE_FORMAT(permintaan_barang_keluar.tanggal_awal, '%d %b %Y') as tanggal_awal_permintaan"),
+				DB::raw("DATE_FORMAT(permintaan_barang_keluar.tanggal_akhir, '%d %b %Y') as tanggal_akhir_permintaan")			
+			)
+			->where('permintaan_barang_keluar.created_by', $user_id)
 			->orderBy('permintaan_barang_keluar.created_at', 'desc')
 			->orderBy('permintaan_barang_keluar.status', 'asc');
 
