@@ -19,14 +19,20 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Exceptions\TokenExpiredException;
 use Tymon\JWTAuth\Exceptions\TokenInvalidException;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Exceptions\UnauthorizedException;
 
 class PermintaanBarangKeluarController extends Controller
 {
 
 	public function index(Request $request)
 	{
-		$search = $request->input('search.value');
+		if (!$request->user()->can('item request.viewAll')) {
+            return response()->json(['message' => 'Tidak diizinkan'], 403);
+        }
 
+		$search = $request->input('search.value');
 		$query = DB::table('permintaan_barang_keluar')
 			->leftJoin('customer', 'permintaan_barang_keluar.customer_id', '=', 'customer.id')
 			->leftJoin('keperluan', 'permintaan_barang_keluar.keperluan_id', '=', 'keperluan.id')
@@ -65,6 +71,10 @@ class PermintaanBarangKeluarController extends Controller
 
 	public function indexForOneUser(Request $request)
 	{
+		if (!$request->user()->can('item request.viewFilterbyUser')) {
+            return response()->json(['message' => 'Tidak diizinkan'], 403);
+        }
+
 		$user = $request->user();
 		$search = $request->input('search.value');
 
@@ -105,9 +115,9 @@ class PermintaanBarangKeluarController extends Controller
 			})
 			->toJson();
 	}	
-	
+
 	public function show($id)
-	{
+	{	
 		$detail = DB::table('detail_permintaan_bk')
 			->leftJoin('barang', 'detail_permintaan_bk.barang_id', '=', 'barang.id')
 			->leftJoin('jenis_barang', 'barang.jenis_barang_id', '=', 'jenis_barang.id')
@@ -146,8 +156,14 @@ class PermintaanBarangKeluarController extends Controller
 		return response()->json($serialNumbers);
 	}
 
-	public function create($id = null)
+	public function create(Request $request)
 	{
+		// $id = null;
+
+		if (!$request->user()->can('item request.create')) {
+            return response()->json(['message' => 'Tidak diizinkan'], 403);
+        }
+
 		$jenis_barang = DB::table('barang_masuk')
 			->join('barang', 'barang_masuk.barang_id', '=', 'barang.id')
 			->join('jenis_barang', 'barang.jenis_barang_id', '=', 'jenis_barang.id')
@@ -184,24 +200,28 @@ class PermintaanBarangKeluarController extends Controller
 			'jenis_barang_id' => null
 		];
 
-		if ($id !== null) {
-			$barangMasuk = DB::table('barang_masuk')->where('id', $id)->first();
-			$jenis_barang_id = DB::table('barang')
-				->join('jenis_barang', 'barang.jenis_barang_id', '=', 'jenis_barang.id')
-				->where('barang.id', $barangMasuk->barang_id)
-				->value('jenis_barang.id');
-			$barangbyjenis = DB::table('barang')->where('jenis_barang_id', $jenis_barang_id)->orderBy('nama', 'asc')->get();
+		// if ($id !== null) {
+		// 	$barangMasuk = DB::table('barang_masuk')->where('id', $id)->first();
+		// 	$jenis_barang_id = DB::table('barang')
+		// 		->join('jenis_barang', 'barang.jenis_barang_id', '=', 'jenis_barang.id')
+		// 		->where('barang.id', $barangMasuk->barang_id)
+		// 		->value('jenis_barang.id');
+		// 	$barangbyjenis = DB::table('barang')->where('jenis_barang_id', $jenis_barang_id)->orderBy('nama', 'asc')->get();
 
-			$data['barangMasuk'] = $barangMasuk;
-			$data['jenis_barang_id'] = $jenis_barang_id;
-			$data['barangbyjenis'] = $barangbyjenis;
-		}
+		// 	$data['barangMasuk'] = $barangMasuk;
+		// 	$data['jenis_barang_id'] = $jenis_barang_id;
+		// 	$data['barangbyjenis'] = $barangbyjenis;
+		// }
 
 		return response()->json($data);
 	}
 
-	public function getBarangByJenis($id)
+	public function getBarangByJenis($id, Request $request)
 	{
+		if (!$request->user()->can('item request.create')) {
+            return response()->json(['message' => 'Tidak diizinkan'], 403);
+        }
+
 		// $barang = DB::table('serial_number')
 		// 	->join('barang_masuk', 'serial_number.barangmasuk_id', '=', 'barang_masuk.id')
 		// 	->join('detail_barang_masuk', 'barang_masuk.id', '=', 'detail_barang_masuk.barangmasuk_id')
@@ -230,8 +250,12 @@ class PermintaanBarangKeluarController extends Controller
 		return response()->json($barang);
 	}
 
-	public function getStok($barang_id)
+	public function getStok($barang_id, Request $request)
 	{
+		if (!$request->user()->can('item request.create')) {
+            return response()->json(['message' => 'Tidak diizinkan'], 403);
+        }
+
 		$stok = DB::table('serial_number')
 			->join('barang_masuk', 'serial_number.barangmasuk_id', '=', 'barang_masuk.id')
 			->join('barang', 'barang_masuk.barang_id', '=', 'barang.id')
@@ -246,8 +270,12 @@ class PermintaanBarangKeluarController extends Controller
 		return response()->json(['stok' => $stok]);
 	}
 
-	public function getSerialNumberByBarang($id)
+	public function getSerialNumberByBarang($id, Request $request)
 	{
+		if (!$request->user()->can('item request.create')) {
+            return response()->json(['message' => 'Tidak diizinkan'], 403);
+        }
+
 		$serialnumber = DB::table('serial_number')
 			->join('barang_masuk', 'serial_number.barangmasuk_id', '=', 'barang_masuk.id')
 			->where('barang_masuk.barang_id', $id)
@@ -268,6 +296,10 @@ class PermintaanBarangKeluarController extends Controller
 
 	public function store(Request $request): JsonResponse
 	{
+		if (!$request->user()->can('item request.create')) {
+            return response()->json(['message' => 'Tidak diizinkan'], 403);
+        }
+
 		$request->validate([
 			// 'serial_numbers' => 'required|array',
 			// 'serial_numbers.*' => 'required|numeric',
@@ -344,8 +376,12 @@ class PermintaanBarangKeluarController extends Controller
 		return response()->json(['success' => true, 'message' => 'Berhasil membuat permintaan barang keluar!']);
 	}
 
-	public function delete($id)
+	public function delete($id, Request $request)
 	{
+		if (!$request->user()->can('item request.delete')) {
+            return response()->json(['message' => 'Tidak diizinkan'], 403);
+        }
+
 		$data = PermintaanBarangKeluar::find($id);
 
 		if (!$data) {
