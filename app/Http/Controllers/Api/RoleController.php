@@ -12,7 +12,7 @@ class RoleController extends Controller
 {
     public function index()
     {
-        //$this->authorize('view', Role::class);
+        //$this->authorize('roles.view', Role::class);
 
         // Ambil semua roles dengan nama permissions terkait
         $roles = Role::with('permissions:name')->get()->map(function ($role) {

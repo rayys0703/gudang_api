@@ -15,6 +15,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Yajra\DataTables\Facades\DataTables;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Tymon\JWTAuth\Exceptions\TokenExpiredException;
+use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 
 class PermintaanBarangKeluarController extends Controller
 {
@@ -59,8 +63,9 @@ class PermintaanBarangKeluarController extends Controller
 			->toJson();
 	}
 
-	public function indexForOneUser(Request $request, $user_id)
+	public function indexForOneUser(Request $request)
 	{
+		$user = $request->user();
 		$search = $request->input('search.value');
 
 		$query = DB::table('permintaan_barang_keluar')
@@ -77,7 +82,7 @@ class PermintaanBarangKeluarController extends Controller
 				DB::raw("DATE_FORMAT(permintaan_barang_keluar.tanggal_awal, '%d %b %Y') as tanggal_awal_permintaan"),
 				DB::raw("DATE_FORMAT(permintaan_barang_keluar.tanggal_akhir, '%d %b %Y') as tanggal_akhir_permintaan")			
 			)
-			->where('permintaan_barang_keluar.created_by', $user_id)
+			->where('permintaan_barang_keluar.created_by', $user->id)
 			->orderBy('permintaan_barang_keluar.created_at', 'desc')
 			->orderBy('permintaan_barang_keluar.status', 'asc');
 
@@ -99,8 +104,8 @@ class PermintaanBarangKeluarController extends Controller
 				return \Carbon\Carbon::parse($item->tanggal_akhir_permintaan)->isoFormat('D MMMM YYYY');
 			})
 			->toJson();
-	}
-
+	}	
+	
 	public function show($id)
 	{
 		$detail = DB::table('detail_permintaan_bk')
@@ -123,7 +128,7 @@ class PermintaanBarangKeluarController extends Controller
 		return response()->json($detail);	
 	}
 
-	public function getSerialNumbers($id)
+	public function showDetailSN($id)
 	{
 		$serialNumbers = DB::table('detail_permintaan_bk')
 			->leftJoin('serial_number_permintaan', 'detail_permintaan_bk.id', '=', 'serial_number_permintaan.detail_permintaan_bk_id')
@@ -309,6 +314,7 @@ class PermintaanBarangKeluarController extends Controller
 			// 'tanggal_awal' => $request->tanggal_awal,
 			'tanggal_awal' => now(),
 			'tanggal_akhir' => $request->tanggal_akhir ?? null,
+			'created_by' => auth()->id(),
 		]);
 
 		foreach ($request->barang_ids as $index => $barangId) {

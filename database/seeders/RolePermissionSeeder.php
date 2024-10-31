@@ -20,7 +20,7 @@ class RolePermissionSeeder extends Seeder
             'requirement type.view', 'requirement type.create', 'requirement type.edit', 'requirement type.delete',
             'incoming item.view', 'incoming item.create', 'incoming item.edit', 'incoming item.delete',
             'outbound item.view', 'outbound item.create', 'outbound item.edit', 'outbound item.delete',
-            'item request.view', 'item request.create', 'item request.confirm',
+            'item request.viewFilterbyUser', 'item request.viewAll', 'item request.create', 'item request.confirm',
             'report.view stock', 'report.export stock', 'report.view incoming item', 'report.export incoming item', 'report.view outbound item', 'report.export outbound item',
             'roles.view', 'roles.create', 'roles.edit', 'roles.delete',
         ];
@@ -35,14 +35,8 @@ class RolePermissionSeeder extends Seeder
         $adminRole->givePermissionTo(Permission::all());
 
         // Buat user Admin dan berikan role Admin
-        $admin = User::firstOrCreate(
-            ['email' => 'tes@gmail.com'],
-            [
-                'name' => 'Admin',
-                'password' => bcrypt('123123123'),
-            ]
-        );
+        $admin = User::find(1);
 
-        $admin->assignRole($adminRole);
+        $admin->assignRole($adminRole);    
     }
 }

@@ -19,6 +19,7 @@ class PermintaanBarangKeluar extends Model
         'tanggal_akhir',
         'keterangan',
         'alasan',
-        'status'
+        'status',
+        'created_by',
     ];
 }

@@ -36,8 +36,28 @@ Route::put('/roles/assign/{user}', [RoleController::class, 'assignRole'])->name(
 // Route::post('logout', [AuthController::class, 'logout']);
 // Route::middleware('auth:api')->get('me', [AuthController::class, 'me']);
 
-/* Perlu Login */
-Route::middleware('auth:sanctum')->group(function () {
+
+Route::middleware(['auth:sanctum'])->group(function() {
+    Route::get('/barang', [BarangController::class, 'index']);
+    Route::get('/barang/create', [BarangController::class, 'create']);
+    Route::post('/barang', [BarangController::class, 'store']);
+    Route::get('/barang/{id}', [BarangController::class, 'edit']);
+    Route::put('/barang/{id}', [BarangController::class, 'update']);
+    Route::delete('/barang/{id}', [BarangController::class, 'delete']);
+    Route::post('/barang/delete-selected', [BarangController::class, 'deleteSelected']);
+
+    Route::get('/permintaanbarangkeluar', [PermintaanBarangKeluarController::class, 'index']); // direct
+    Route::get('/permintaanbarangkeluar/create', [PermintaanBarangKeluarController::class, 'create']);
+    Route::get('/permintaanbarangkeluar/onlyfor', [PermintaanBarangKeluarController::class, 'indexForOneUser']);
+    Route::post('/permintaanbarangkeluar', [PermintaanBarangKeluarController::class, 'store']);
+    Route::get('/permintaanbarangkeluar/get-by-jenis/{id}', [PermintaanBarangKeluarController::class, 'getBarangByJenis']);
+    Route::get('/permintaanbarangkeluar/get-by-barang/{id}', [PermintaanBarangKeluarController::class, 'getSerialNumberByBarang']);
+    Route::post('/permintaanbarangkeluar/update-status', [PermintaanBarangKeluarController::class, 'updateStatus']);
+    Route::put('/permintaanbarangkeluar/{id}', [PermintaanBarangKeluarController::class, 'update']);
+    Route::delete('/permintaanbarangkeluar/{id}', [PermintaanBarangKeluarController::class, 'delete']);
+    Route::get('/permintaanbarangkeluar/{id}', [PermintaanBarangKeluarController::class, 'show']); // direct
+    Route::get('/permintaanbarangkeluar/show-detail-sn/{id}', [PermintaanBarangKeluarController::class, 'showDetailSN']); // direct
+    Route::get('/permintaanbarangkeluar/get-stok/{barang_id}', [PermintaanBarangKeluarController::class, 'getStok']);
 });
 
     Route::get('dashboard', [DashboardController::class, 'index']);
@@ -62,14 +82,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/statusbarang/{id}', [StatusBarangController::class, 'update']);
     Route::delete('/statusbarang/{id}', [StatusBarangController::class, 'delete']);
     Route::post('/statusbarang/delete-selected', [StatusBarangController::class, 'deleteSelected']);
-
-    Route::get('/barang', [BarangController::class, 'index']);
-    Route::get('/barang/create', [BarangController::class, 'create']);
-    Route::post('/barang', [BarangController::class, 'store']);
-    Route::get('/barang/{id}', [BarangController::class, 'edit']);
-    Route::put('/barang/{id}', [BarangController::class, 'update']);
-    Route::delete('/barang/{id}', [BarangController::class, 'delete']);
-    Route::post('/barang/delete-selected', [BarangController::class, 'deleteSelected']);
 
     Route::get('/barangmasuk', [BarangMasukController::class, 'index']);
     Route::get('/barangmasuk/create/{id?}', [BarangMasukController::class, 'create']);
@@ -103,19 +115,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/customers/{id}', [CustomerController::class, 'update']);
     Route::delete('/customers/{id}', [CustomerController::class, 'delete']);
     Route::post('/customers/delete-selected', [CustomerController::class, 'deleteSelected']);
-
-    Route::get('/permintaanbarangkeluar', [PermintaanBarangKeluarController::class, 'index']);
-    Route::get('/permintaanbarangkeluar/onlyfor/{user_id}', [PermintaanBarangKeluarController::class, 'indexForOneUser']);
-    Route::get('/permintaanbarangkeluar/create', [PermintaanBarangKeluarController::class, 'create']);
-    Route::get('/permintaanbarangkeluar/get-by-jenis/{id}', [PermintaanBarangKeluarController::class, 'getBarangByJenis']);
-    Route::get('/permintaanbarangkeluar/get-by-barang/{id}', [PermintaanBarangKeluarController::class, 'getSerialNumberByBarang']);
-    Route::post('/permintaanbarangkeluar', [PermintaanBarangKeluarController::class, 'store']);
-    Route::post('/permintaanbarangkeluar/update-status', [PermintaanBarangKeluarController::class, 'updateStatus']);
-    Route::put('/permintaanbarangkeluar/{id}', [PermintaanBarangKeluarController::class, 'update']);
-    Route::delete('/permintaanbarangkeluar/{id}', [PermintaanBarangKeluarController::class, 'delete']);
-    Route::get('/permintaanbarangkeluar/{id}', [PermintaanBarangKeluarController::class, 'show']);
-    Route::get('/permintaanbarangkeluar/get-sn/{id}', [PermintaanBarangKeluarController::class, 'getSerialNumbers']);
-    Route::get('/permintaanbarangkeluar/get-stok/{barang_id}', [PermintaanBarangKeluarController::class, 'getStok']);
     
     Route::get('/permintaanbarangkeluar/selectSN/{id}', [PermintaanBarangKeluarController::class, 'selectSN'])->name('permintaanbarangkeluar.selectSN');
     Route::post('/permintaanbarangkeluar/setSN', [PermintaanBarangKeluarController::class, 'setSN'])->name('permintaanbarangkeluar.setSN');

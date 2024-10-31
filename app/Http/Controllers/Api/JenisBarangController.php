@@ -19,9 +19,10 @@ class JenisBarangController extends Controller
 	{
 		$query = JenisBarang::query();
 
-        if ($search = $request->input('search.value')) {
-            $query->where('nama', 'like', "%{$search}%");
-        }
+		if ($search = $request->input('search.value')) {
+			$query->where('nama', 'like', "%{$search}%")
+				->orWhere('deskripsi', 'like', "%{$search}%");
+		}
 
         return datatables($query)->toJson();
 	}
@@ -30,14 +31,17 @@ class JenisBarangController extends Controller
 	{
 		$request->validate([
 			'nama' => 'required|string|max:255',
+			'deskripsi' => 'nullable|string',
 		], [
 			'nama.required' => 'Nama jenis barang harus diisi.',
 			'nama.string' => 'Nama jenis barang harus berupa teks.',
 			'nama.max' => 'Nama jenis barang tidak boleh lebih dari 255 karakter.',
+			'deskripsi.string' => 'Deskripsi harus berupa teks.',
 		]);
 		
 		$data = JenisBarang::create([
 			'nama' => $request->nama,
+			'deskripsi' => $request->deskripsi,
 		]);
 
 		return response()->json(['success' => true, 'message' => 'Data berhasil ditambahkan!']);
@@ -53,21 +57,28 @@ class JenisBarangController extends Controller
 	{
 		$request->validate([
 			'nama' => 'required|string|max:255',
+			'deskripsi' => 'nullable|string',
 		], [
 			'nama.required' => 'Nama jenis barang harus diisi.',
 			'nama.string' => 'Nama jenis barang harus berupa teks.',
 			'nama.max' => 'Nama jenis barang tidak boleh lebih dari 255 karakter.',
+			'deskripsi.string' => 'Deskripsi harus berupa teks.',
 		]);
 
 		$data = JenisBarang::find($id);
 		if (!$data) {
-			return response()->json(['success' => false, 'message' => 'Data tidak ditemukan.'], 404);
-		}
+            return response()->json(['success' => false, 'message' => 'Data tidak ditemukan.'], 404);
+        }
 
-		$data->nama = $request->nama;
-		$data->save();
+		if ($data) {
+			$data->nama = $request->nama;
+			$data->deskripsi = $request->deskripsi;
+			$data->save();
 
-		return response()->json(['success' => true, 'message' => 'Data berhasil diperbarui!']);
+			return response()->json(['success' => true, 'message' => 'Data berhasil diperbarui!']);
+        }
+
+		return response()->json(['success' => false, 'message' => 'Data tidak ditemukan.']);
 	}
 
 	public function delete($id)

@@ -11,5 +11,5 @@ class JenisBarang extends Model
 
     protected $table = "jenis_barang";
 
-    protected $fillable = ['nama'];
+    protected $fillable = ['nama','deskripsi'];
 }

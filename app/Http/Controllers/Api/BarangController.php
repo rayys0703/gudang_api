@@ -12,12 +12,19 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Yajra\DataTables\Facades\DataTables;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Exceptions\UnauthorizedException;
 
 class BarangController extends Controller
 {
 
 	public function index(Request $request)
-	{
+	{		
+        if (!$request->user()->can('item.view')) {
+            return response()->json(['message' => 'Tidak diizinkan'], 403);
+        }
+
 		$search = $request->input('search.value');
 
 		$query = DB::table('barang')
@@ -41,8 +48,12 @@ class BarangController extends Controller
 		return datatables($query)->toJson();
 	}
 
-	public function create()
+	public function create(Request $request)
 	{
+		if (!$request->user()->can('item.create')) {
+            return response()->json(['message' => 'Tidak diizinkan'], 403);
+        }
+
 		$jenis_barang = DB::table('jenis_barang')->select('id', 'nama')->orderBy('nama')->get();
 		$supplier = DB::table('supplier')->select('id', 'nama')->orderBy('nama')->get();
 		$data = [
@@ -54,6 +65,9 @@ class BarangController extends Controller
 
 	public function store(Request $request): JsonResponse
 	{
+		if (!$request->user()->can('item.create')) {
+            return response()->json(['message' => 'Tidak diizinkan'], 403);
+        }
 		$request->validate([
 			'nama' => 'required|string|max:255',
 			'jenis_barang' => 'required|numeric',
@@ -81,8 +95,11 @@ class BarangController extends Controller
 		return response()->json(['success' => true, 'message' => 'Data berhasil ditambahkan!']);
 	}
 
-	public function edit($id)
+	public function edit($id, Request $request)
 	{
+		if (!$request->user()->can('item.edit')) {
+            return response()->json(['message' => 'Tidak diizinkan'], 403);
+        }
 		$jenis_barang = DB::table('jenis_barang')->select('id', 'nama')->orderBy('nama')->get();
 		$supplier = DB::table('supplier')->select('id', 'nama')->orderBy('nama')->get();
 		$data = Barang::find($id);
@@ -95,6 +112,9 @@ class BarangController extends Controller
 
 	public function update($id, Request $request): JsonResponse
 	{
+		if (!$request->user()->can('item.edit')) {
+            return response()->json(['message' => 'Tidak diizinkan'], 403);
+        }
 		$request->validate([
 			'nama' => 'required|string|max:255',
 			'jenis_barang' => 'required|numeric',
@@ -132,8 +152,11 @@ class BarangController extends Controller
 		return response()->json(['success' => false, 'message' => 'Data tidak ditemukan.']);
 	}
 
-	public function delete($id)
+	public function delete($id, Request $request)
 	{
+		if (!$request->user()->can('item.delete')) {
+            return response()->json(['message' => 'Tidak diizinkan'], 403);
+        }
 		$data = Barang::find($id);
 
 		BarangMasuk::where('barang_id', $id)->delete();
@@ -144,6 +167,9 @@ class BarangController extends Controller
 
 	public function deleteSelected(Request $request)
 	{
+		if (!$request->user()->can('item.delete')) {
+            return response()->json(['message' => 'Tidak diizinkan'], 403);
+        }
 		$ids = $request->input('ids');
 		foreach ($ids as $id) {
 			$data = Barang::find($id);
