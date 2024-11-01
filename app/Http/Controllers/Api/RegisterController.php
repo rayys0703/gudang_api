@@ -57,7 +57,10 @@ class RegisterController extends Controller
     {
         $user = Auth::user()->load('roles.permissions');
         return response()->json([
-            'user' => $user,
+            //'user' => $user,
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
             'roles' => $user->roles->pluck('name'),
             'permissions' => $user->roles->flatMap(function ($role) {
                 return $role->permissions->pluck('name');
