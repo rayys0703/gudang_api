@@ -21,9 +21,9 @@ class BarangController extends Controller
 
 	public function index(Request $request)
 	{		
-        if (!$request->user()->can('item.view')) {
-            return response()->json(['message' => 'Tidak diizinkan'], 403);
-        }
+        // if (!$request->user()->can('item.view')) {
+        //     return response()->json(['message' => 'Tidak diizinkan'], 403);
+        // }
 
 		$search = $request->input('search.value');
 

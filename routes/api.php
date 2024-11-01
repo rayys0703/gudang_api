@@ -20,12 +20,18 @@ use App\Http\Controllers\Api\LaporanController;
 use App\Http\Controllers\Api\SerialNumberController;
 use App\Http\Controllers\Api\RoleController;
 
+// use App\Http\Controllers\Api\RegisterController;
+// Route::controller(RegisterController::class)->group(function(){
+//     Route::post('register', 'register');
+//     Route::post('login', 'login');
+// });
+// Route::middleware(['auth:sanctum'])->get('/user', [RegisterController::class, 'getUserData']);
+
 use App\Http\Controllers\Api\RegisterController;
-Route::controller(RegisterController::class)->group(function(){
-    Route::post('register', 'register');
-    Route::post('login', 'login');
-});
-Route::middleware(['auth:sanctum'])->get('/user', [RegisterController::class, 'getUserData']);
+
+Route::post('register', [RegisterController::class, 'register']);
+Route::post('login', [RegisterController::class, 'login']);
+Route::middleware(['jwt.verify'])->get('/user', [RegisterController::class, 'getUserData']);
 
 Route::resource('roles', RoleController::class);
 Route::put('/roles/assign/{user}', [RoleController::class, 'assignRole'])->name('roles.assign');
@@ -37,8 +43,7 @@ Route::put('/roles/assign/{user}', [RoleController::class, 'assignRole'])->name(
 // Route::middleware('auth:api')->get('me', [AuthController::class, 'me']);
 
 
-Route::middleware(['auth:sanctum'])->group(function() {
-    Route::get('/barang', [BarangController::class, 'index']);
+Route::middleware(['jwt.verify'])->group(function() {
     Route::get('/barang/create', [BarangController::class, 'create']);
     Route::post('/barang', [BarangController::class, 'store']);
     Route::get('/barang/{id}', [BarangController::class, 'edit']);
@@ -59,6 +64,8 @@ Route::middleware(['auth:sanctum'])->group(function() {
     Route::get('/permintaanbarangkeluar/show-detail-sn/{id}', [PermintaanBarangKeluarController::class, 'showDetailSN']); // direct
     Route::get('/permintaanbarangkeluar/get-stok/{barang_id}', [PermintaanBarangKeluarController::class, 'getStok']);
 });
+
+    Route::get('/barang', [BarangController::class, 'index']);
 
     Route::get('dashboard', [DashboardController::class, 'index']);
     Route::get('/dashboard/daily-activity', [DashboardController::class, 'getDailyActivity']);
