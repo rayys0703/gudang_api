@@ -61,7 +61,7 @@ class RegisterController extends Controller
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
-            'roles' => $user->roles->pluck('name'),
+            'roles' => $user->roles->pluck('name')->first(),
             'permissions' => $user->roles->flatMap(function ($role) {
                 return $role->permissions->pluck('name');
             })->unique(), // Nama permissions
