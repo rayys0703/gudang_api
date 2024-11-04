@@ -69,8 +69,8 @@ class DashboardController extends Controller
         $counts_barang_keluar = DB::table('detail_permintaan_bk')
             ->join('permintaan_barang_keluar', 'detail_permintaan_bk.permintaan_barang_keluar_id', '=', 'permintaan_barang_keluar.id')
             ->join('barang_keluar', 'detail_permintaan_bk.permintaan_barang_keluar_id', '=', 'barang_keluar.permintaan_id')
-            ->select(DB::raw('DATE(permintaan_barang_keluar.created_at) as date'), DB::raw('SUM(detail_permintaan_bk.jumlah) as count'))
-            ->whereBetween('permintaan_barang_keluar.created_at', [Carbon::now()->subDays(6), Carbon::now()])
+            ->select(DB::raw('DATE(permintaan_barang_keluar.updated_at) as date'), DB::raw('SUM(detail_permintaan_bk.jumlah) as count'))
+            ->whereBetween('permintaan_barang_keluar.updated_at', [Carbon::now()->subDays(6), Carbon::now()])
             ->groupBy('date')
             ->orderBy('date', 'DESC')
             ->get()
@@ -171,7 +171,7 @@ class DashboardController extends Controller
             ->join('barang', 'barang_masuk.barang_id', '=', 'barang.id')
             ->join('jenis_barang', 'barang.jenis_barang_id', '=', 'jenis_barang.id')
             ->join('supplier', 'barang.supplier_id', '=', 'supplier.id')
-            ->whereDate('permintaan_barang_keluar.created_at', today())
+            ->whereDate('permintaan_barang_keluar.updated_at', today())
             ->select(
                 'serial_number.serial_number', 
                 'barang.nama as nama_barang', 
