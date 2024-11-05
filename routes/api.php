@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\LaporanController;
 use App\Http\Controllers\Api\SerialNumberController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\RegisterController;
+use App\Http\Controllers\Api\ProfileController;
 
 /* Autentikasi JWT */
 Route::post('register', [RegisterController::class, 'register']);
@@ -36,6 +37,8 @@ Route::put('/roles/assign/{user}', [RoleController::class, 'assignRole'])->name(
 // Route::middleware('auth:api')->get('me', [AuthController::class, 'me']);
 
 Route::middleware(['jwt.verify'])->group(function() {
+    Route::put('/user/update', [ProfileController::class, 'update']);
+    
     Route::get('/barang/create', [BarangController::class, 'create']);
     Route::post('/barang', [BarangController::class, 'store']);
     Route::get('/barang/{id}', [BarangController::class, 'edit']);
