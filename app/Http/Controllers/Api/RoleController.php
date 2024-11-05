@@ -7,14 +7,13 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Yajra\DataTables\Facades\DataTables;
 
 class RoleController extends Controller
 {
     public function index()
     {
-        //$this->authorize('roles.view', Role::class);
-
-        // Ambil semua roles dengan nama permissions terkait
+        // Mengambil data roles dengan permissions terkait
         $roles = Role::with('permissions:name')->get()->map(function ($role) {
             return [
                 'id' => $role->id,
@@ -23,17 +22,16 @@ class RoleController extends Controller
             ];
         });
 
-        // Ambil semua users dengan nama roles terkait
+        // Mengambil data users dengan roles terkait
         $users = User::with('roles:name')->get()->map(function ($user) {
             return [
                 'id' => $user->id,
                 'name' => $user->name,
-                'email' => $user->email,
                 'roles' => $user->roles->pluck('name')->toArray()
             ];
         });
 
-        // Ambil semua permissions dengan hanya 'id' dan 'name'
+        // Mengambil data permissions
         $permissions = Permission::all(['id', 'name'])->map(function ($permission) {
             return [
                 'id' => $permission->id,
@@ -41,11 +39,13 @@ class RoleController extends Controller
             ];
         });
 
-        return response()->json([
-            'roles' => $roles,
-            'users' => $users,
-            'permissions' => $permissions,
-        ]);
+        // Menyusun data dalam format DataTables untuk `roles`
+        return DataTables::of($roles)
+            ->with([
+                'users' => $users,      // Data users disertakan
+                'permissions' => $permissions  // Data permissions disertakan
+            ])
+            ->toJson();
     }
 
     public function create()
