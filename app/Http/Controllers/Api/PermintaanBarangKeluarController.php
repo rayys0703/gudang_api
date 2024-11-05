@@ -533,7 +533,7 @@ class PermintaanBarangKeluarController extends Controller
 
 			// Cek apakah jumlah serial number yang dikirim cukup
 			if (count($serialNumbers) < $detail->jumlah) {
-				return response()->json(['success' => false, 'message' => 'Jumlah serial number yang dikirim tidak mencukupi.'], 400);
+				return response()->json(['success' => false, 'message' => 'Jumlah serial number yang tersedia tidak mencukupi.'], 400);
 			}
 
 			// Loop serial numbers yang dipilih
