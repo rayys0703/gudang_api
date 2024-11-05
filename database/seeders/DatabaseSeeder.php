@@ -22,9 +22,9 @@ class DatabaseSeeder extends Seeder
                 'password' => Hash::make('admin'),
             ],
             [
-                'name' => 'Petugas Gudang',
-                'email' => 'petugas@gmail.com',
-                'password' => Hash::make('petugas'),
+                'name' => 'Customer',
+                'email' => 'customer@gmail.com',
+                'password' => Hash::make('customer'),
             ],
         ];
 

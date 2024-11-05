@@ -34,9 +34,16 @@ class RolePermissionSeeder extends Seeder
         $adminRole = Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
         $adminRole->givePermissionTo(Permission::all());
 
+        // Buat role Customer dengan izin terbatas
+        $customerRole = Role::firstOrCreate(['name' => 'Customer', 'guard_name' => 'web']);
+        $customerRole->givePermissionTo(['item.view', 'item request.viewFilterbyUser', 'item request.create']);
+
         // Buat user Admin dan berikan role Admin
         $admin = User::find(1);
+        $admin->assignRole($adminRole);
 
-        $admin->assignRole($adminRole);    
+        // Buat user Customer dan berikan role Customer
+        $customer = User::find(2);
+        $customer->assignRole($customerRole);    
     }
 }
