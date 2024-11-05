@@ -41,8 +41,9 @@ class LaporanController extends Controller
             })
             ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
                 return $query->whereBetween('barang_masuk.tanggal', [$startDate, $endDate]);
-            })
-            ->orderBy('barang_masuk.tanggal', 'desc');
+            });
+            // ->orderBy('barang_masuk.tanggal', 'desc');
+
         $data = datatables($query);
 
         $stokKeseluruhan = DB::table('barang_masuk')
@@ -173,6 +174,7 @@ class LaporanController extends Controller
 							'supplier.nama as nama_supplier',
 							'barang_masuk.jumlah'
 						)
+						->where('barang_masuk.jumlah', '>', 0)
 						->when($search, function ($query) use ($search) {
 							return $query->where('barang.nama', 'like', '%' . $search . '%')
 								->orWhere('barang_masuk.keterangan', 'like', '%' . $search . '%')
@@ -183,9 +185,12 @@ class LaporanController extends Controller
 							$end = \Carbon\Carbon::parse($endDate)->endOfDay();
 							return $query->whereBetween('barang_masuk.tanggal', [$start, $end]);
 						})
-						->orderBy('barang_masuk.created_at', 'desc');
+						->orderBy('barang_masuk.tanggal', 'desc');
 
 					return datatables($query)
+                        ->editColumn('tanggal', function ($item) {
+                            return \Carbon\Carbon::parse($item->tanggal)->isoFormat('dddd, DD MMMM YYYY');
+                        })
 						->addColumn('detail', function ($item) {
 							return DB::table('detail_barang_masuk')
 								->leftJoin('serial_number', 'detail_barang_masuk.serial_number_id', '=', 'serial_number.id')
@@ -350,10 +355,10 @@ class LaporanController extends Controller
 
         return datatables($query)
             ->editColumn('tanggal_awal', function ($item) {
-                return \Carbon\Carbon::parse($item->tanggal_awal)->isoFormat('DD MMMM YYYY');
+                return \Carbon\Carbon::parse($item->tanggal_awal)->isoFormat('dddd, DD MMMM YYYY');
             })
             ->editColumn('tanggal_akhir', function ($item) {
-                return \Carbon\Carbon::parse($item->tanggal_akhir)->isoFormat('DD MMMM YYYY');
+                return \Carbon\Carbon::parse($item->tanggal_akhir)->isoFormat('dddd, DD MMMM YYYY');
             })
             ->addColumn('detail', function ($item) {
                 return DB::table('detail_permintaan_bk')

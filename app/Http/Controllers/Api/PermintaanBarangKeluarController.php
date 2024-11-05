@@ -63,10 +63,10 @@ class PermintaanBarangKeluarController extends Controller
 
 		return DataTables::of($query)
 			->editColumn('tanggal_awal', function ($item) {
-				return \Carbon\Carbon::parse($item->tanggal_awal_permintaan)->isoFormat('D MMMM YYYY');
+				return \Carbon\Carbon::parse($item->tanggal_awal_permintaan)->isoFormat('dddd, D MMMM YYYY');
 			})
 			->editColumn('tanggal_akhir', function ($item) {
-				return \Carbon\Carbon::parse($item->tanggal_akhir_permintaan)->isoFormat('D MMMM YYYY');
+				return \Carbon\Carbon::parse($item->tanggal_akhir_permintaan)->isoFormat('dddd, D MMMM YYYY');
 			})
 			->toJson();
 	}
@@ -112,10 +112,10 @@ class PermintaanBarangKeluarController extends Controller
 
 		return DataTables::of($query)
 			->editColumn('tanggal_awal', function ($item) {
-				return \Carbon\Carbon::parse($item->tanggal_awal_permintaan)->isoFormat('D MMMM YYYY');
+				return \Carbon\Carbon::parse($item->tanggal_awal_permintaan)->isoFormat('dddd, D MMMM YYYY');
 			})
 			->editColumn('tanggal_akhir', function ($item) {
-				return \Carbon\Carbon::parse($item->tanggal_akhir_permintaan)->isoFormat('D MMMM YYYY');
+				return \Carbon\Carbon::parse($item->tanggal_akhir_permintaan)->isoFormat('dddd, D MMMM YYYY');
 			})
 			->toJson();
 	}	
