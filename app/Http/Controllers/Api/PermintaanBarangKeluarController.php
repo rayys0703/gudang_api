@@ -36,12 +36,14 @@ class PermintaanBarangKeluarController extends Controller
 		$query = DB::table('permintaan_barang_keluar')
 			->leftJoin('customer', 'permintaan_barang_keluar.customer_id', '=', 'customer.id')
 			->leftJoin('keperluan', 'permintaan_barang_keluar.keperluan_id', '=', 'keperluan.id')
+			->leftJoin('users', 'permintaan_barang_keluar.created_by', '=', 'users.id')
 			->select(
 				'permintaan_barang_keluar.*',
 				'customer.nama as nama_customer',
 				'keperluan.nama as nama_keperluan',
 				'permintaan_barang_keluar.id as permintaan_barang_keluar_id',
 				'permintaan_barang_keluar.jumlah as jumlah_permintaan',
+				'users.name as requested_by',
 				'keperluan.extend as extend',
 				DB::raw("REPLACE(keperluan.nama_tanggal_akhir, 'Tanggal ', '') as nama_tanggal_akhir"),
 				DB::raw("DATE_FORMAT(permintaan_barang_keluar.tanggal_awal, '%d %b %Y') as tanggal_awal_permintaan"),
@@ -81,12 +83,14 @@ class PermintaanBarangKeluarController extends Controller
 		$query = DB::table('permintaan_barang_keluar')
 			->leftJoin('customer', 'permintaan_barang_keluar.customer_id', '=', 'customer.id')
 			->leftJoin('keperluan', 'permintaan_barang_keluar.keperluan_id', '=', 'keperluan.id')
+			->leftJoin('users', 'permintaan_barang_keluar.created_by', '=', 'users.id')
 			->select(
 				'permintaan_barang_keluar.*',
 				'customer.nama as nama_customer',
 				'keperluan.nama as nama_keperluan',
 				'permintaan_barang_keluar.id as permintaan_barang_keluar_id',
 				'permintaan_barang_keluar.jumlah as jumlah_permintaan',
+				'users.name as requested_by',
 				'keperluan.extend as extend',
 				DB::raw("REPLACE(keperluan.nama_tanggal_akhir, 'Tanggal ', '') as nama_tanggal_akhir"),
 				DB::raw("DATE_FORMAT(permintaan_barang_keluar.tanggal_awal, '%d %b %Y') as tanggal_awal_permintaan"),

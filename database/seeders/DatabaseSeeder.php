@@ -201,7 +201,7 @@ class DatabaseSeeder extends Seeder
         $barang_masuk = [
             [
                 'barang_id' => 1,
-                'jumlah' => 3,
+                'jumlah' => 4,
                 'tanggal' => $faker->dateTimeBetween('-3 days', 'now'),
                 'created_at' => now(),
             ],
