@@ -5,7 +5,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 //use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Api\AuthController;
+// use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\CustomerController;
@@ -19,16 +19,9 @@ use App\Http\Controllers\Api\PermintaanBarangKeluarController;
 use App\Http\Controllers\Api\LaporanController;
 use App\Http\Controllers\Api\SerialNumberController;
 use App\Http\Controllers\Api\RoleController;
-
-// use App\Http\Controllers\Api\RegisterController;
-// Route::controller(RegisterController::class)->group(function(){
-//     Route::post('register', 'register');
-//     Route::post('login', 'login');
-// });
-// Route::middleware(['auth:sanctum'])->get('/user', [RegisterController::class, 'getUserData']);
-
 use App\Http\Controllers\Api\RegisterController;
 
+/* Autentikasi JWT */
 Route::post('register', [RegisterController::class, 'register']);
 Route::post('login', [RegisterController::class, 'login']);
 Route::middleware(['jwt.verify'])->get('/user', [RegisterController::class, 'getUserData']);
@@ -36,12 +29,11 @@ Route::middleware(['jwt.verify'])->get('/user', [RegisterController::class, 'get
 Route::resource('roles', RoleController::class);
 Route::put('/roles/assign/{user}', [RoleController::class, 'assignRole'])->name('roles.assign');
 
-/* Autentikasi */
+/* Autentikasi Lama */
 // Route::post('register', [AuthController::class, 'register']);
 // Route::post('login', [AuthController::class, 'login']);
 // Route::post('logout', [AuthController::class, 'logout']);
 // Route::middleware('auth:api')->get('me', [AuthController::class, 'me']);
-
 
 Route::middleware(['jwt.verify'])->group(function() {
     Route::get('/barang/create', [BarangController::class, 'create']);
