@@ -191,11 +191,14 @@ class LaporanController extends Controller
 								->leftJoin('serial_number', 'detail_barang_masuk.serial_number_id', '=', 'serial_number.id')
 								->leftJoin('status_barang', 'detail_barang_masuk.status_barang_id', '=', 'status_barang.id')
 								->select(
-									'serial_number.serial_number as serial_number',
-									'status_barang.nama as status_barang',
-									'status_barang.warna as warna_status_barang',
-									'detail_barang_masuk.kelengkapan as kelengkapan_barang'
-								)
+                                    DB::raw('CASE 
+                                        WHEN serial_number.status = 1 THEN CONCAT(serial_number.serial_number, " (Released)")
+                                        ELSE serial_number.serial_number
+                                    END as serial_number'),
+                                    'status_barang.nama as status_barang',
+                                    'status_barang.warna as warna_status_barang',
+                                    'detail_barang_masuk.kelengkapan as kelengkapan_barang'
+                                )
 								->where('detail_barang_masuk.barangmasuk_id', $item->barang_masuk_id)
 								->orderBy('serial_number.serial_number', 'asc')
 								->get();
@@ -278,14 +281,26 @@ class LaporanController extends Controller
         ->leftJoin('jenis_barang', 'barang.jenis_barang_id', '=', 'jenis_barang.id')
         ->leftJoin('supplier', 'barang.supplier_id', '=', 'supplier.id')
         ->leftJoin('status_barang', 'detail_barang_masuk.status_barang_id', '=', 'status_barang.id')
+        // ->select(
+        //     'serial_number.serial_number as serial_number',
+        //     'status_barang.nama as status_barang',
+        //     'status_barang.warna as warna_status_barang',
+        //     'detail_barang_masuk.kelengkapan as kelengkapan_barang',
+        //     'barang.nama as nama_barang', 
+        //             'jenis_barang.nama as nama_jenis_barang', 
+        //             'supplier.nama as nama_supplier'
+        // )
         ->select(
-            'serial_number.serial_number as serial_number',
+            DB::raw('CASE 
+                WHEN serial_number.status = 1 THEN CONCAT(serial_number.serial_number, " (Released)")
+                ELSE serial_number.serial_number
+            END as serial_number'),
             'status_barang.nama as status_barang',
             'status_barang.warna as warna_status_barang',
             'detail_barang_masuk.kelengkapan as kelengkapan_barang',
             'barang.nama as nama_barang', 
-                    'jenis_barang.nama as nama_jenis_barang', 
-                    'supplier.nama as nama_supplier'
+            'jenis_barang.nama as nama_jenis_barang', 
+            'supplier.nama as nama_supplier'
         )
         ->where('detail_barang_masuk.barangmasuk_id', $barangmasuk_id)
         ->orderBy('serial_number.serial_number', 'asc')
