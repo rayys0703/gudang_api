@@ -567,9 +567,9 @@ class PermintaanBarangKeluarController extends Controller
 				]);
 
 				// Update jumlah barang masuk di tabel barang_masuk
-				// DB::table('barang_masuk')
-				// 	->where('id', $serialNumber->barangmasuk_id)
-				// 	->decrement('jumlah', 1);
+				DB::table('barang_masuk')
+					->where('id', $serialNumber->barangmasuk_id)
+					->decrement('jumlah', 1);
 
 				// Tandai serial number sebagai sudah digunakan
 				DB::table('serial_number')

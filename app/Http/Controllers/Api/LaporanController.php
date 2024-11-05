@@ -148,12 +148,12 @@ class LaporanController extends Controller
             ->leftJoin('status_barang', 'detail_barang_masuk.status_barang_id', '=', 'status_barang.id')
             ->select('serial_number.serial_number', 'status_barang.nama as status_barang', 'status_barang.warna as warna_status_barang', 'detail_barang_masuk.kelengkapan')
             ->where('barang.id', $barangId)
+            ->where('serial_number.status', '!=', 1)
             ->orderBy('serial_number.serial_number', 'asc')
             ->get();
 
         return response()->json($detail);
-    }
-    
+    }    
 				public function barangmasuk(Request $request)
 				{
 					$search = $request->input('search');
