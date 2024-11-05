@@ -33,6 +33,7 @@ class LaporanController extends Controller
                 DB::raw('SUM(barang_masuk.jumlah) as jumlah'),
                 'barang_masuk.tanggal'
             )
+            ->where('barang_masuk.jumlah', '>', 0)
             ->groupBy('barang.id', 'barang.nama', 'jenis_barang.nama', 'supplier.nama', 'barang_masuk.tanggal')
             ->when($search, function ($query) use ($search) {
                 return $query->where('barang.nama', 'like', '%' . $search . '%')
@@ -42,7 +43,6 @@ class LaporanController extends Controller
                 return $query->whereBetween('barang_masuk.tanggal', [$startDate, $endDate]);
             })
             ->orderBy('barang_masuk.tanggal', 'desc');
-
         $data = datatables($query);
 
         $stokKeseluruhan = DB::table('barang_masuk')
