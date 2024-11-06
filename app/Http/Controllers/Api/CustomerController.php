@@ -91,7 +91,7 @@ class CustomerController extends Controller
     {
         $request->validate([
             'nama' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . $id,
+            // 'email' => 'required|email|max:255|unique:users,email,' . User::where('customer_id', $id)->first()->id,
             'alamat' => 'required|string|max:255',
             'telepon' => 'required|numeric|digits_between:10,15',
             'keterangan' => 'nullable|string|max:255',
@@ -99,10 +99,10 @@ class CustomerController extends Controller
             'nama.required' => 'Nama harus diisi.',
             'nama.string' => 'Nama harus berupa teks.',
             'nama.max' => 'Nama tidak boleh lebih dari 255 karakter.',
-            'email.required' => 'Email harus diisi.',
-            'email.email' => 'Format email tidak valid.',
-            'email.max' => 'Email tidak boleh lebih dari 255 karakter.',
-            'email.unique' => 'Email sudah terdaftar.',
+            // 'email.required' => 'Email harus diisi.',
+            // 'email.email' => 'Format email tidak valid.',
+            // 'email.max' => 'Email tidak boleh lebih dari 255 karakter.',
+            // 'email.unique' => 'Email sudah terdaftar.',
             'alamat.required' => 'Alamat harus diisi.',
             'alamat.string' => 'Alamat harus berupa teks.',
             'alamat.max' => 'Alamat tidak boleh lebih dari 255 karakter.',
@@ -129,13 +129,13 @@ class CustomerController extends Controller
         $user = User::where('customer_id', $customer->id)->first();
         if ($user) {
             $user->name = $customer->nama;
-            $user->email = $customer->email;
+            $user->email = $request->email;
             $user->save();
         }
 
         return response()->json(['success' => true, 'message' => 'Data berhasil diperbarui!']);
     }
-
+	
     public function delete($id)
     {
         $customer = Customer::find($id);
