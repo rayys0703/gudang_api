@@ -24,8 +24,12 @@ return new class extends Migration
             $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
             $table->foreign('updated_by')->references('id')->on('users')->onDelete('set null');
         });
-    }
 
+        Schema::table('users', function (Blueprint $table) {
+            $table->unsignedBigInteger('customer_id')->nullable();
+            $table->foreign('customer_id')->references('id')->on('customer')->onDelete('cascade')->onUpdate('cascade');
+        });
+    }
     /**
      * Reverse the migrations.
      */

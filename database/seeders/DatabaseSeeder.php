@@ -21,11 +21,6 @@ class DatabaseSeeder extends Seeder
                 'email' => 'admin@gmail.com',
                 'password' => Hash::make('admin'),
             ],
-            [
-                'name' => 'Customer',
-                'email' => 'customer@gmail.com',
-                'password' => Hash::make('customer'),
-            ],
         ];
 
         DB::table('users')->insert($users);
@@ -48,9 +43,11 @@ class DatabaseSeeder extends Seeder
         ///
 
         $customer = [];
-        for ($i = 0; $i < 20; $i++) {
+        $users = [];
+        for ($i = 0; $i < 5; $i++) {
+            $customerName = $faker->company;
             $customer[] = [
-                'nama' => $faker->company,
+                'nama' => $customerName,
                 'alamat' => $faker->address,
                 'telepon' => $faker->phoneNumber,
             ];
@@ -58,6 +55,18 @@ class DatabaseSeeder extends Seeder
 
         DB::table('customer')->insert($customer);
 
+        $customers = DB::table('customer')->get();
+        foreach ($customers as $cust) {
+            $users[] = [
+                'name' => $cust->nama,
+                'email' => $faker->email,
+                'password' => Hash::make('customer123'),
+                'customer_id' => $cust->id,
+            ];
+        }
+
+        DB::table('users')->insert($users);        
+        
         ///
         
         $jenisbarang = [
@@ -363,7 +372,7 @@ class DatabaseSeeder extends Seeder
 
         $permintaan_barang_keluar = [
             [
-                'customer_id' => 6,
+                'customer_id' => 1,
                 'keperluan_id' => 1,
                 'jumlah' => 3,
                 'tanggal_awal' => now(),
@@ -373,7 +382,7 @@ class DatabaseSeeder extends Seeder
                 'created_at' => now(),
             ],
             [
-                'customer_id' => 3,
+                'customer_id' => 1,
                 'keperluan_id' => 2,
                 'jumlah' => 1,
                 'tanggal_awal' => now(),

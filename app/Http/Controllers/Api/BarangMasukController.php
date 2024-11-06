@@ -50,7 +50,7 @@ class BarangMasukController extends Controller
 					->leftJoin('supplier', 'barang.supplier_id', '=', 'supplier.id')
 					->leftJoin('jenis_barang', 'barang.jenis_barang_id', '=', 'jenis_barang.id')
 					->leftJoin('barang_masuk', 'barang.id', '=', 'barang_masuk.barang_id')
-					->select('barang.*', 'barang.id as barang_id', 'barang_masuk.id as barang_masuk_id', 'barang.nama as nama_barang', 'barang.keterangan as keterangan_barang', DB::raw("DATE_FORMAT(barang_masuk.tanggal, '%W, %e %M %Y') as tanggal_barang"), 'jenis_barang.nama as nama_jenis_barang', 'supplier.nama as nama_supplier', 'barang_masuk.jumlah as jumlah', 'barang_masuk.keterangan as keterangan_barangmasuk')
+					->select('barang.*', 'barang.id as barang_id', 'barang_masuk.id as barang_masuk_id', 'barang.nama as nama_barang', 'barang.keterangan as keterangan_barang', DB::raw("to_char(barang_masuk.tanggal, 'Day, DD Month YYYY') as tanggal_barang"), 'jenis_barang.nama as nama_jenis_barang', 'supplier.nama as nama_supplier', 'barang_masuk.jumlah as jumlah', 'barang_masuk.keterangan as keterangan_barangmasuk')					
 					->groupBy('barang.id', 'barang_masuk.id', 'nama_barang', 'barang.jenis_barang_id', 'barang.supplier_id', 'keterangan_barang', 'tanggal_barang', 'barang.created_at', 'barang.updated_at', 'jenis_barang.nama', 'supplier.nama', 'barang_masuk.jumlah', 'keterangan_barangmasuk')
 					->havingRaw('barang_masuk.jumlah > 0')
 					->orderBy('barang_masuk.tanggal', 'desc');
@@ -60,8 +60,7 @@ class BarangMasukController extends Controller
 
 			$query->where('barang.nama', 'like', "%{$search}%")
 
-			->orWhere(DB::raw("DATE_FORMAT(barang_masuk.tanggal, '%W, %e %M %Y')"), 'like', "%{$search}%")
-
+			->orWhere(DB::raw("to_char(barang_masuk.tanggal, 'Day, DD Month YYYY')"), 'like', "%{$search}%")
 			->orWhere('supplier.nama', 'like', "%{$search}%");
 
 
@@ -279,7 +278,7 @@ class BarangMasukController extends Controller
 
 			'keterangan' => 'nullable|string|max:255',
 
-			'tanggal' => 'required|date_format:Y-m-d|before_or_equal:today',
+			'tanggal' => 'required|date:Y-m-d|before_or_equal:today',
 
 			'serial_numbers.*' => 'required|string|max:255',
 
@@ -299,7 +298,7 @@ class BarangMasukController extends Controller
 
 			'tanggal.required' => 'Tanggal harus diisi.',
 
-			'tanggal.date_format' => 'Format tanggal harus YYYY-MM-DD.',
+			'tanggal.date' => 'Format tanggal harus YYYY-MM-DD.',
 
 			'tanggal.before_or_equal' => 'Tanggal tidak boleh lebih dari hari ini.',
 
@@ -382,7 +381,7 @@ class BarangMasukController extends Controller
 		$request->validate([
 			'barang_id' => 'required|string',
 			'keterangan' => 'nullable|string|max:255',
-			'tanggal' => 'required|date_format:Y-m-d|before_or_equal:today',
+			'tanggal' => 'required|date:Y-m-d|before_or_equal:today',
 			'serial_numbers.*' => 'required|string|max:255',
 			'status_barangs.*' => 'required|exists:status_barang,nama',
 			'kelengkapans.*' => 'nullable|string|max:255',
@@ -392,7 +391,7 @@ class BarangMasukController extends Controller
 			'keterangan.string' => 'Keterangan harus berupa teks.',
 			'keterangan.max' => 'Keterangan tidak boleh lebih dari 255 karakter.',
 			'tanggal.required' => 'Tanggal harus diisi.',
-			'tanggal.date_format' => 'Format tanggal harus YYYY-MM-DD.',
+			'tanggal.date' => 'Format tanggal harus YYYY-MM-DD.',
 			'tanggal.before_or_equal' => 'Tanggal tidak boleh lebih dari hari ini.',
 			'serial_numbers.*.required' => 'Serial Number harus diisi.',
 			'serial_numbers.*.string' => 'Serial Number harus berupa teks.',
@@ -487,7 +486,7 @@ class BarangMasukController extends Controller
 
             'keterangan' => 'string|max:255',
 
-            'tanggal' => 'required|date_format:Y-m-d H:i:s',
+            'tanggal' => 'required|date:Y-m-d H:i:s',
 
         ]);
 

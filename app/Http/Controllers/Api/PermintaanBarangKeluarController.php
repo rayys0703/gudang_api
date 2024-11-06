@@ -46,8 +46,9 @@ class PermintaanBarangKeluarController extends Controller
 				'users.name as requested_by',
 				'keperluan.extend as extend',
 				DB::raw("REPLACE(keperluan.nama_tanggal_akhir, 'Tanggal ', '') as nama_tanggal_akhir"),
-				DB::raw("DATE_FORMAT(permintaan_barang_keluar.tanggal_awal, '%d %b %Y') as tanggal_awal_permintaan"),
-				DB::raw("DATE_FORMAT(permintaan_barang_keluar.tanggal_akhir, '%d %b %Y') as tanggal_akhir_permintaan")			)
+				DB::raw("to_char(permintaan_barang_keluar.tanggal_awal, 'DD Mon YYYY') as tanggal_awal_permintaan"),
+				DB::raw("to_char(permintaan_barang_keluar.tanggal_akhir, 'DD Mon YYYY') as tanggal_akhir_permintaan")			
+			)
 			->orderBy('permintaan_barang_keluar.created_at', 'desc')
 			->orderBy('permintaan_barang_keluar.status', 'asc');
 
@@ -93,8 +94,8 @@ class PermintaanBarangKeluarController extends Controller
 				'users.name as requested_by',
 				'keperluan.extend as extend',
 				DB::raw("REPLACE(keperluan.nama_tanggal_akhir, 'Tanggal ', '') as nama_tanggal_akhir"),
-				DB::raw("DATE_FORMAT(permintaan_barang_keluar.tanggal_awal, '%d %b %Y') as tanggal_awal_permintaan"),
-				DB::raw("DATE_FORMAT(permintaan_barang_keluar.tanggal_akhir, '%d %b %Y') as tanggal_akhir_permintaan")			
+				DB::raw("to_char(permintaan_barang_keluar.tanggal_awal, 'DD Mon YYYY') as tanggal_awal_permintaan"),
+				DB::raw("to_char(permintaan_barang_keluar.tanggal_akhir, 'DD Mon YYYY') as tanggal_akhir_permintaan")			
 			)
 			->where('permintaan_barang_keluar.created_by', $user->id)
 			->orderBy('permintaan_barang_keluar.created_at', 'desc')
@@ -305,8 +306,6 @@ class PermintaanBarangKeluarController extends Controller
         }
 
 		$request->validate([
-			// 'serial_numbers' => 'required|array',
-			// 'serial_numbers.*' => 'required|numeric',
 			'barang_ids' => 'required|array',
 			'barang_ids.*' => 'required|numeric',
 			'jumlah_barangs' => 'required|array',
@@ -314,8 +313,6 @@ class PermintaanBarangKeluarController extends Controller
 			'customer_id' => 'required|numeric',
 			'keperluan_id' => 'required|numeric',
 			'keterangan' => 'nullable|string|max:255',
-			// 'tanggal_awal' => 'required|date_format:Y-m-d',
-			// 'tanggal_akhir' => 'nullable|date_format:Y-m-d',
 		], [
 			// 'serial_numbers.required' => 'Serial Number harus diisi.',
 			// 'serial_numbers.array' => 'Serial Number harus berupa array.',
@@ -335,9 +332,6 @@ class PermintaanBarangKeluarController extends Controller
 			'keperluan_id.numeric' => 'ID Keperluan harus berupa angka.',
 			'keterangan.string' => 'Keterangan harus berupa teks.',
 			'keterangan.max' => 'Keterangan tidak boleh lebih dari 255 karakter.',
-			// 'tanggal_awal.required' => 'Tanggal harus diisi.',
-			// 'tanggal_awal.date_format' => 'Format tanggal harus YYYY-MM-DD.',
-			// 'tanggal_akhir.date_format' => 'Format tanggal harus YYYY-MM-DD.',
 		]);
 
 		$jumlah = array_sum($request->jumlah_barangs);

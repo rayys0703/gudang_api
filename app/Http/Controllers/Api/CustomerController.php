@@ -5,8 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Customer;
-use App\Models\Barang;
-use App\Models\BarangMasuk;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
@@ -15,138 +14,160 @@ use Yajra\DataTables\Facades\DataTables;
 class CustomerController extends Controller
 {
 
-	public function index(Request $request)
-	{
-		$query = Customer::query();
+    public function index(Request $request)
+    {
+        $query = Customer::leftJoin('users', 'customer.id', '=', 'users.customer_id')
+            ->select('customer.*', 'users.email as email');
 
         if ($search = $request->input('search.value')) {
-            $query->where('nama', 'like', "%{$search}%")
-                ->orWhere('alamat', 'like', "%{$search}%")
-                ->orWhere('telepon', 'like', "%{$search}%")
-                ->orWhere('keterangan', 'like', "%{$search}%");
+            $query->where(function($q) use ($search) {
+                $q->where('customer.nama', 'like', "%{$search}%")
+                  ->orWhere('customer.alamat', 'like', "%{$search}%")
+                  ->orWhere('customer.telepon', 'like', "%{$search}%")
+                  ->orWhere('customer.keterangan', 'like', "%{$search}%")
+                  ->orWhere('users.name', 'like', "%{$search}%")
+                  ->orWhere('users.email', 'like', "%{$search}%");
+            });
         }
 
         return datatables($query)->toJson();
+    }
 
-		// $search = $request->input('search');
+    public function store(Request $request): JsonResponse
+    {
+        $request->validate([
+            'nama' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email',
+            'alamat' => 'required|string|max:255',
+            'telepon' => 'required|numeric|digits_between:10,15',
+            'keterangan' => 'nullable|string|max:255',
+        ], [
+            'nama.required' => 'Nama harus diisi.',
+            'nama.string' => 'Nama harus berupa teks.',
+            'nama.max' => 'Nama tidak boleh lebih dari 255 karakter.',
+            'email.required' => 'Email harus diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'email.max' => 'Email tidak boleh lebih dari 255 karakter.',
+            'email.unique' => 'Email sudah terdaftar.',
+            'alamat.required' => 'Alamat harus diisi.',
+            'alamat.string' => 'Alamat harus berupa teks.',
+            'alamat.max' => 'Alamat tidak boleh lebih dari 255 karakter.',
+            'telepon.required' => 'Nomor telepon harus diisi.',
+            'telepon.numeric' => 'Nomor telepon harus berupa angka.',
+            'telepon.digits_between' => 'Nomor telepon harus memiliki panjang antara 10 sampai 15 digit.',
+            'keterangan.string' => 'Keterangan harus berupa teks.',
+            'keterangan.max' => 'Keterangan tidak boleh lebih dari 255 karakter.',
+        ]);
 
-        // $data = Customer::when($search, function ($query) use ($search) {
-        //     return $query->where('nama', 'like', '%' . $search . '%')
-		// 	->orWhere('alamat', 'like', '%' . $search . '%')
-		// 	->orWhere('telepon', 'like', '%' . $search . '%')
-		// 	->orWhere('keterangan', 'like', '%' . $search . '%');
-        // })->orderBy('nama', 'asc')->paginate(7);	
-					
-        // return view('customer.index', compact('data'));
-	}
+        $customer = Customer::create([
+            'nama' => $request->nama,
+            'alamat' => $request->alamat,
+            'telepon' => $request->telepon,
+            'keterangan' => $request->keterangan,
+            'created_by' => Auth::id(),
+        ]);
 
-	public function store(Request $request): JsonResponse
-	{
-		$request->validate([
-			'nama' => 'required|string|max:255',
-			'alamat' => 'required|string|max:255',
-			'telepon' => 'required|numeric|digits_between:10,15',
-			'keterangan' => 'nullable|string|max:255',
-		], [
-			'nama.required' => 'Nama harus diisi.',
-			'nama.string' => 'Nama harus berupa teks.',
-			'nama.max' => 'Nama tidak boleh lebih dari 255 karakter.',
-			'alamat.required' => 'Alamat harus diisi.',
-			'alamat.string' => 'Alamat harus berupa teks.',
-			'alamat.max' => 'Alamat tidak boleh lebih dari 255 karakter.',
-			'telepon.required' => 'Nomor telepon harus diisi.',
-			'telepon.numeric' => 'Nomor telepon harus berupa angka.',
-			'telepon.digits_between' => 'Nomor telepon harus memiliki panjang antara 10 sampai 15 digit.',
-			'keterangan.string' => 'Keterangan harus berupa teks.',
-			'keterangan.max' => 'Keterangan tidak boleh lebih dari 255 karakter.',
-		]);
+        // Membuat akun User terkait
+        $user = User::create([
+            'name' => $customer->nama,
+            'email' => $request->email,
+            'password' => bcrypt('customer123'),
+            'customer_id' => $customer->id,
+        ]);
 
-		$data = Customer::create([
-			'nama' => $request->nama,
-			'alamat' => $request->alamat,
-			'telepon' => $request->telepon,
-			'keterangan' => $request->keterangan,
-			'created_by' => Auth::id(),
-		]);
+        return response()->json(['success' => true, 'message' => 'Data berhasil ditambahkan!']);
+    }
 
-		return response()->json(['success' => true, 'message' => 'Data berhasil ditambahkan!']);
-	}
+    public function edit($id)
+    {
+            $data = DB::table('customer')
+                ->leftJoin('users', 'customer.id', '=', 'users.customer_id')
+                ->where('customer.id', $id)
+                ->first();        
+			return response()->json($data);
+    }
 
-	public function edit($id)
-	{
-		$data = Customer::find($id);
-		return response()->json($data);
-	}
+    public function update($id, Request $request): JsonResponse
+    {
+        $request->validate([
+            'nama' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . $id,
+            'alamat' => 'required|string|max:255',
+            'telepon' => 'required|numeric|digits_between:10,15',
+            'keterangan' => 'nullable|string|max:255',
+        ], [
+            'nama.required' => 'Nama harus diisi.',
+            'nama.string' => 'Nama harus berupa teks.',
+            'nama.max' => 'Nama tidak boleh lebih dari 255 karakter.',
+            'email.required' => 'Email harus diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'email.max' => 'Email tidak boleh lebih dari 255 karakter.',
+            'email.unique' => 'Email sudah terdaftar.',
+            'alamat.required' => 'Alamat harus diisi.',
+            'alamat.string' => 'Alamat harus berupa teks.',
+            'alamat.max' => 'Alamat tidak boleh lebih dari 255 karakter.',
+            'telepon.required' => 'Nomor telepon harus diisi.',
+            'telepon.numeric' => 'Nomor telepon harus berupa angka.',
+            'telepon.digits_between' => 'Nomor telepon harus memiliki panjang antara 10 sampai 15 digit.',
+            'keterangan.string' => 'Keterangan harus berupa teks.',
+            'keterangan.max' => 'Keterangan tidak boleh lebih dari 255 karakter.',
+        ]);
 
-	public function update($id, Request $request): JsonResponse
-	{
-		$request->validate([
-			'nama' => 'required|string|max:255',
-			'alamat' => 'required|string|max:255',
-			'telepon' => 'required|numeric|digits_between:10,15',
-			'keterangan' => 'nullable|string|max:255',
-		], [
-			'nama.required' => 'Nama harus diisi.',
-			'nama.string' => 'Nama harus berupa teks.',
-			'nama.max' => 'Nama tidak boleh lebih dari 255 karakter.',
-			'alamat.required' => 'Alamat harus diisi.',
-			'alamat.string' => 'Alamat harus berupa teks.',
-			'alamat.max' => 'Alamat tidak boleh lebih dari 255 karakter.',
-			'telepon.required' => 'Nomor telepon harus diisi.',
-			'telepon.numeric' => 'Nomor telepon harus berupa angka.',
-			'telepon.digits_between' => 'Nomor telepon harus memiliki panjang antara 10 sampai 15 digit.',
-			'keterangan.string' => 'Keterangan harus berupa teks.',
-			'keterangan.max' => 'Keterangan tidak boleh lebih dari 255 karakter.',
-		]);
-
-		$data = Customer::find($id);
-		if (!$data) {
+        $customer = Customer::find($id);
+        if (!$customer) {
             return response()->json(['success' => false, 'message' => 'Data tidak ditemukan.'], 404);
         }
 
-		if ($data) {
-			$data->nama = $request->nama;
-			$data->alamat = $request->alamat;
-			$data->telepon = $request->telepon;
-			$data->keterangan = $request->keterangan;
-			$data->updated_by = Auth::id();
-			$data->save();
+        $customer->nama = $request->nama;
+        $customer->alamat = $request->alamat;
+        $customer->telepon = $request->telepon;
+        $customer->keterangan = $request->keterangan;
+        $customer->updated_by = Auth::id();
+        $customer->save();
 
-			return response()->json(['success' => true, 'message' => 'Data berhasil diperbarui!']);
+        // Memperbarui akun User terkait
+        $user = User::where('customer_id', $customer->id)->first();
+        if ($user) {
+            $user->name = $customer->nama;
+            $user->email = $customer->email;
+            $user->save();
         }
 
-		return response()->json(['success' => false, 'message' => 'Data tidak ditemukan.']);
-	}
+        return response()->json(['success' => true, 'message' => 'Data berhasil diperbarui!']);
+    }
 
-	public function delete($id)
-	{
-		$customer = Customer::find($id);
+    public function delete($id)
+    {
+        $customer = Customer::find($id);
+        if (!$customer) {
+            return response()->json(['success' => false, 'message' => 'Data tidak ditemukan.'], 404);
+        }
 
-		$customer->delete();
-		return response()->json(['success' => true, 'message' => 'Data berhasil dihapus!']);
-	}
+        // Menghapus akun User terkait
+        $user = User::where('customer_id', $customer->id)->first();
+        if ($user) {
+            $user->delete();
+        }
 
-	public function deleteSelected(Request $request)
-	{
-		$ids = $request->input('ids');
-		foreach ($ids as $id) {
-			$customer = Customer::find($id);
+        $customer->delete();
+        return response()->json(['success' => true, 'message' => 'Data berhasil dihapus!']);
+    }
 
-			if ($customer) {
-				/*$barangMasuk = BarangMasuk::where('customer_id', $id)->get();
+    public function deleteSelected(Request $request)
+    {
+        $ids = $request->input('ids');
+        foreach ($ids as $id) {
+            $customer = Customer::find($id);
 
-				foreach ($barangMasuk as $item) {
-					$barang = Barang::find($item->barang_id);
-					if ($barang) {
-						$barang->jumlah -= $item->jumlah;
-						$barang->save();
-					}
-					$item->delete();
-				}*/
-
-				$customer->delete();
-			}
-		}
-		return response()->json(['success' => true, 'message' => 'Data terpilih berhasil dihapus!']);
-	}
+            if ($customer) {
+                // Menghapus akun User terkait
+                $user = User::where('customer_id', $customer->id)->first();
+                if ($user) {
+                    $user->delete();
+                }
+                $customer->delete();
+            }
+        }
+        return response()->json(['success' => true, 'message' => 'Data terpilih berhasil dihapus!']);
+    }
 }

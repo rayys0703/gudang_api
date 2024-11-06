@@ -27,19 +27,19 @@ class DashboardController extends Controller
             ->where('created_at', '<', $startDate)
             ->count();
 
-        // 2. Menghasilkan daftar semua tanggal dari $startDate hingga $endDate
-        $barangPerhari = DB::table(DB::raw('(WITH RECURSIVE all_dates AS (
-            SELECT "' . $startDate . '" AS tanggal
+        // 2. Menghasilkan daftar semua tanggal dari $startDate hingga $endDate dengan sintaks PostgreSQL
+        $barangPerhari = DB::table(DB::raw("(WITH RECURSIVE all_dates AS (
+            SELECT '$startDate'::timestamp AS tanggal
             UNION ALL
-            SELECT DATE_ADD(tanggal, INTERVAL 1 DAY)
+            SELECT (tanggal + INTERVAL '1 day')::timestamp
             FROM all_dates
-            WHERE tanggal < "' . $endDate . '"
+            WHERE tanggal < '$endDate'::timestamp
             )
-            SELECT ad.tanggal, COALESCE(COUNT(b.id), 0) AS total_jumlah
+            SELECT ad.tanggal::date, COALESCE(COUNT(b.id), 0) AS total_jumlah
             FROM all_dates ad
-            LEFT JOIN barang b ON DATE(b.created_at) = ad.tanggal
+            LEFT JOIN barang b ON DATE(b.created_at) = ad.tanggal::date
             GROUP BY ad.tanggal
-            ORDER BY ad.tanggal ASC) AS barang_perhari'))
+            ORDER BY ad.tanggal ASC) AS barang_perhari"))
             ->select('tanggal', 'total_jumlah')
             ->get();
 
@@ -95,7 +95,7 @@ class DashboardController extends Controller
         $counts_barang_masuk_6months = DB::table('serial_number')
             ->join('barang_masuk', 'serial_number.barangmasuk_id', '=', 'barang_masuk.id')
             ->join('barang', 'barang_masuk.barang_id', '=', 'barang.id')
-            ->select(DB::raw('DATE_FORMAT(barang_masuk.tanggal, "%Y-%m") as month'), DB::raw('COUNT(*) as count'))
+            ->select(DB::raw("to_char(barang_masuk.tanggal, 'YYYY-MM') as month"), DB::raw('COUNT(*) as count'))            
             ->whereBetween('barang_masuk.tanggal', [Carbon::now()->subMonths(5)->startOfMonth(), Carbon::now()->endOfMonth()])
             ->groupBy('month')
             ->orderBy('month', 'DESC')
@@ -106,7 +106,7 @@ class DashboardController extends Controller
         $counts_barang_keluar_6months = DB::table('detail_permintaan_bk')
             ->join('permintaan_barang_keluar', 'detail_permintaan_bk.permintaan_barang_keluar_id', '=', 'permintaan_barang_keluar.id')
             ->join('barang_keluar', 'detail_permintaan_bk.permintaan_barang_keluar_id', '=', 'barang_keluar.permintaan_id')
-            ->select(DB::raw('DATE_FORMAT(permintaan_barang_keluar.created_at, "%Y-%m") as month'), DB::raw('SUM(detail_permintaan_bk.jumlah) as count'))
+            ->select(DB::raw("to_char(permintaan_barang_keluar.created_at, 'YYYY-MM') as month"), DB::raw('SUM(detail_permintaan_bk.jumlah) as count'))          
             ->whereBetween('tanggal', [Carbon::now()->subMonths(5)->startOfMonth(), Carbon::now()->endOfMonth()])
             ->groupBy('month')
             ->orderBy('month', 'DESC')
@@ -123,9 +123,6 @@ class DashboardController extends Controller
         $result = [
             'dates' => $dates,
             'counts_barang' => $cumulativeBarang,
-            // 'counts_barang' => $dates->map(function ($date) use ($counts_barang) {
-            //     return $counts_barang->get($date)->count ?? 0;
-            // }),
             'counts_barang_masuk' => $dates->map(function ($date) use ($counts_barang_masuk) {
                 return $counts_barang_masuk->get($date)->count ?? 0;
             }),
@@ -146,7 +143,6 @@ class DashboardController extends Controller
             'total_barang_masuk' => $total_barang_masuk,
             'total_barang_keluar' => $total_barang_keluar,
             'total_permintaan' => $total_permintaan,
-
             'permintaan_ditolak' => DB::table('permintaan_barang_keluar')->where('status', 'Ditolak')->count(),
             'permintaan_diterima' => DB::table('permintaan_barang_keluar')->where('status', 'Disetujui')->count(),
             'permintaan_pending' => DB::table('permintaan_barang_keluar')->where('status', 'Belum Disetujui')->count(),

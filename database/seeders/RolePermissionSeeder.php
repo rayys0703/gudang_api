@@ -42,8 +42,12 @@ class RolePermissionSeeder extends Seeder
         $admin = User::find(1);
         $admin->assignRole($adminRole);
 
-        // Buat user Customer dan berikan role Customer
-        $customer = User::find(2);
-        $customer->assignRole($customerRole);    
-    }
+            // Buat user Customer dan berikan role Customer
+            for($i = 2; $i <= 6; $i++) {
+                $customer = User::find($i);
+                if($customer) {
+                    $customer->assignRole($customerRole);
+                }
+            }    
+        }
 }
