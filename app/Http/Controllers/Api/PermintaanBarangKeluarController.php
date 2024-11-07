@@ -169,6 +169,10 @@ class PermintaanBarangKeluarController extends Controller
             return response()->json(['message' => 'Tidak diizinkan'], 403);
         }
 
+		// if (!($request->user()->can('item request.create') && $request->user()->can('item request.viewAll'))) {
+        //     return response()->json(['message' => 'Tidak diizinkan'], 403);
+        // }
+
 		$jenis_barang = DB::table('barang_masuk')
 			->join('barang', 'barang_masuk.barang_id', '=', 'barang.id')
 			->join('jenis_barang', 'barang.jenis_barang_id', '=', 'jenis_barang.id')
@@ -183,6 +187,7 @@ class PermintaanBarangKeluarController extends Controller
 			->distinct()
 			->orderBy('jenis_barang.nama', 'asc')
 			->get();
+
 		// $jenis_barang = DB::table('jenis_barang')->select('id', 'nama')->orderBy('nama', 'asc')->get();
 		$barang = DB::table('barang')
 			->join('jenis_barang', 'barang.jenis_barang_id', '=', 'jenis_barang.id')
@@ -190,7 +195,19 @@ class PermintaanBarangKeluarController extends Controller
 			->orderBy('jenis_barang.nama', 'asc')
 			->orderBy('barang.nama', 'asc')			
 			->get();
-		$customer = DB::table('customer')->select('id', 'nama')->orderBy('nama', 'asc')->get();
+
+		if ($request->user()->can('item request.create') && $request->user()->can('item request.viewAll') && $request->user()->can('item request.confirm')) {
+			$customer = DB::table('customer')->select('id', 'nama')->orderBy('nama', 'asc')->get();
+		// } else if ($request->user()->can('item request.create') && $request->user()->can('item request.viewFilterbyUser')) {
+		// 	$customer = DB::table('users')
+		// 		->join('customer', 'users.customer_id', '=', 'customer.id')
+		// 		->where('users.id', auth()->id())
+		// 		->select('customer.id as id', 'customer.nama as nama')
+		// 		->first();
+		} else {
+			$customer = null;
+		}	
+
 		$keperluan = DB::table('keperluan')
 			->select('id', 'nama', 'extend', 'nama_tanggal_akhir', 'batas_hari')
 			->orderBy('nama', 'asc')->get();
@@ -301,77 +318,90 @@ class PermintaanBarangKeluarController extends Controller
 
 	public function store(Request $request): JsonResponse
 	{
-		if (!$request->user()->can('item request.create')) {
-            return response()->json(['message' => 'Tidak diizinkan'], 403);
-        }
-
-		$request->validate([
-			'barang_ids' => 'required|array',
-			'barang_ids.*' => 'required|numeric',
-			'jumlah_barangs' => 'required|array',
-			'jumlah_barangs.*' => 'required|numeric',
-			'customer_id' => 'required|numeric',
-			'keperluan_id' => 'required|numeric',
-			'keterangan' => 'nullable|string|max:255',
-		], [
-			// 'serial_numbers.required' => 'Serial Number harus diisi.',
-			// 'serial_numbers.array' => 'Serial Number harus berupa array.',
-			// 'serial_numbers.*.required' => 'Setiap Serial Number harus diisi.',
-			// 'serial_numbers.*.numeric' => 'Serial Number harus berupa angka.',
-			'barang_ids.required' => 'Serial Number harus diisi.',
-			'barang_ids.array' => 'Barang harus berupa array.',
-			'barang_ids.*.required' => 'Setiap Barang harus diisi.',
-			'barang_ids.*.numeric' => 'Barang harus berupa angka.',
-			'jumlah_barangs.required' => 'Jumlah barang harus diisi.',
-			'jumlah_barangs.array' => 'Jumlah barang harus berupa array.',
-			'jumlah_barangs.*.required' => 'Setiap Jumlah barang harus diisi.',
-			'jumlah_barangs.*.numeric' => 'Jumlah barang harus berupa angka.',
-			'customer_id.required' => 'Penerima harus dipilih.',
-			'customer_id.numeric' => 'ID Penerima barang harus berupa angka.',
-			'keperluan_id.required' => 'Keperluan harus dipilih.',
-			'keperluan_id.numeric' => 'ID Keperluan harus berupa angka.',
-			'keterangan.string' => 'Keterangan harus berupa teks.',
-			'keterangan.max' => 'Keterangan tidak boleh lebih dari 255 karakter.',
-		]);
-
-		$jumlah = array_sum($request->jumlah_barangs);
-
-		$permintaan = PermintaanBarangKeluar::create([
-			'customer_id' => $request->customer_id,
-			'keperluan_id' => $request->keperluan_id,
-			'jumlah' => $jumlah,
-			'keterangan' => $request->keterangan,
-			// 'tanggal_awal' => $request->tanggal_awal,
-			'tanggal_awal' => now(),
-			'tanggal_akhir' => $request->tanggal_akhir ?? null,
-			'created_by' => auth()->id(),
-		]);
-
-		foreach ($request->barang_ids as $index => $barangId) {
-			$barangIdData = DB::table('barang')
-				->where('id', $barangId)
-				->first();
-
-			if (!$barangIdData) {
-				return response()->json(['success' => false, 'message' => 'Barang ' . $barangId . ' tidak ditemukan.'], 400);
+		try {
+			if (!$request->user()->can('item request.create')) {
+				return response()->json(['message' => 'Tidak diizinkan'], 403);
 			}
 
-			$detailId = DB::table('detail_permintaan_bk')->insertGetId([
-				'permintaan_barang_keluar_id' => $permintaan->id,
-				'barang_id' => $barangIdData->id,
-				'jumlah' => $request->jumlah_barangs[$index],
-				'keterangan' => $request->keterangan,
+			if (!$request->user()->can('item request.confirm') && $request->customer_id == null) {
+				$customerId = DB::table('users')
+					->join('customer', 'users.customer_id', '=', 'customer.id')
+					->where('users.id', auth()->id())
+					->value('customer.id');
+				
+				$request->request->set('customer_id', $customerId);
+			}		
+
+			$request->validate([
+				'barang_ids' => 'required|array',
+				'barang_ids.*' => 'required|numeric',
+				'jumlah_barangs' => 'required|array',
+				'jumlah_barangs.*' => 'required|numeric',
+				'customer_id' => 'required|numeric',
+				'keperluan_id' => 'required|numeric',
+				'keterangan' => 'nullable|string|max:255',
+			], [
+				// 'serial_numbers.required' => 'Serial Number harus diisi.',
+				// 'serial_numbers.array' => 'Serial Number harus berupa array.',
+				// 'serial_numbers.*.required' => 'Setiap Serial Number harus diisi.',
+				// 'serial_numbers.*.numeric' => 'Serial Number harus berupa angka.',
+				'barang_ids.required' => 'Serial Number harus diisi.',
+				'barang_ids.array' => 'Barang harus berupa array.',
+				'barang_ids.*.required' => 'Setiap Barang harus diisi.',
+				'barang_ids.*.numeric' => 'Barang harus berupa angka.',
+				'jumlah_barangs.required' => 'Jumlah barang harus diisi.',
+				'jumlah_barangs.array' => 'Jumlah barang harus berupa array.',
+				'jumlah_barangs.*.required' => 'Setiap Jumlah barang harus diisi.',
+				'jumlah_barangs.*.numeric' => 'Jumlah barang harus berupa angka.',
+				'customer_id.required' => 'Penerima harus dipilih.',
+				'customer_id.numeric' => 'ID Penerima barang harus berupa angka.',
+				'keperluan_id.required' => 'Keperluan harus dipilih.',
+				'keperluan_id.numeric' => 'ID Keperluan harus berupa angka.',
+				'keterangan.string' => 'Keterangan harus berupa teks.',
+				'keterangan.max' => 'Keterangan tidak boleh lebih dari 255 karakter.',
 			]);
 
-			// for ($i = 0; $i < $request->jumlah_barangs[$index]; $i++) {
-			// 	DB::table('serial_number_permintaan')->insert([
-			// 		'detail_permintaan_bk_id' => $detailId,
-			// 		'serial_number_id' => null,
-			// 	]);
-			// }
-		}
+			$jumlah = array_sum($request->jumlah_barangs);
 
-		return response()->json(['success' => true, 'message' => 'Berhasil membuat permintaan barang keluar!']);
+			$permintaan = PermintaanBarangKeluar::create([
+				'customer_id' => $request->customer_id,
+				'keperluan_id' => $request->keperluan_id,
+				'jumlah' => $jumlah,
+				'keterangan' => $request->keterangan,
+				// 'tanggal_awal' => $request->tanggal_awal,
+				'tanggal_awal' => now(),
+				'tanggal_akhir' => $request->tanggal_akhir ?? null,
+				'created_by' => auth()->id(),
+			]);
+
+			foreach ($request->barang_ids as $index => $barangId) {
+				$barangIdData = DB::table('barang')
+					->where('id', $barangId)
+					->first();
+
+				if (!$barangIdData) {
+					return response()->json(['success' => false, 'message' => 'Barang ' . $barangId . ' tidak ditemukan.'], 400);
+				}
+
+				$detailId = DB::table('detail_permintaan_bk')->insertGetId([
+					'permintaan_barang_keluar_id' => $permintaan->id,
+					'barang_id' => $barangIdData->id,
+					'jumlah' => $request->jumlah_barangs[$index],
+					'keterangan' => $request->keterangan,
+				]);
+
+				// for ($i = 0; $i < $request->jumlah_barangs[$index]; $i++) {
+				// 	DB::table('serial_number_permintaan')->insert([
+				// 		'detail_permintaan_bk_id' => $detailId,
+				// 		'serial_number_id' => null,
+				// 	]);
+				// }
+			}
+
+			return response()->json(['success' => true, 'message' => 'Berhasil membuat permintaan barang keluar!']);
+		} catch (\Exception $e) {
+			return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+		}
 	}
 
 	public function delete($id, Request $request)
