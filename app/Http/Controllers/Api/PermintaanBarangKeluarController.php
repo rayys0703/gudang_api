@@ -406,9 +406,9 @@ class PermintaanBarangKeluarController extends Controller
 
 	public function delete($id, Request $request)
 	{
-		if (!$request->user()->can('item request.delete')) {
-            return response()->json(['message' => 'Tidak diizinkan'], 403);
-        }
+		// if (!$request->user()->can('item request.delete')) {
+        //     return response()->json(['message' => 'Tidak diizinkan'], 403);
+        // }
 
 		$data = PermintaanBarangKeluar::find($id);
 
