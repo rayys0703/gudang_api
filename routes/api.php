@@ -27,7 +27,12 @@ Route::post('register', [RegisterController::class, 'register']);
 Route::post('login', [RegisterController::class, 'login']);
 Route::middleware(['jwt.verify'])->get('/user', [RegisterController::class, 'getUserData']);
 
-Route::resource('roles', RoleController::class);
+Route::get('/roles', [RoleController::class, 'index']);
+Route::post('/roles', [RoleController::class, 'store']);
+// Route::get('/roles/{id}', [RoleController::class, 'show']);
+Route::put('/roles/{id}', [RoleController::class, 'update']);
+Route::delete('/roles/{id}', [RoleController::class, 'destroy']);
+Route::get('/roles/assign', [RoleController::class, 'indexAssignRole']);
 Route::put('/roles/assign/{user}', [RoleController::class, 'assignRole'])->name('roles.assign');
 
 /* Autentikasi Lama */
@@ -38,7 +43,7 @@ Route::put('/roles/assign/{user}', [RoleController::class, 'assignRole'])->name(
 
 Route::middleware(['jwt.verify'])->group(function() {
     Route::put('/user/update', [ProfileController::class, 'update']);
-    
+
     Route::get('/barang/create', [BarangController::class, 'create']);
     Route::post('/barang', [BarangController::class, 'store']);
     Route::get('/barang/{id}', [BarangController::class, 'edit']);

@@ -49,6 +49,23 @@ class RoleController extends Controller
             ->toJson();
     }
 
+    public function indexAssignRole()
+    {
+    
+        // Mengambil data users dengan roles terkait
+        $users = User::with('roles:name')->get()->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'roles' => $user->roles->pluck('name')->toArray()
+            ];
+        });
+
+        // Menyusun data dalam format DataTables untuk `roles`
+        return DataTables::of($users)->toJson();
+    }
+
     public function create()
     {
         // Ambil semua permissions dari database

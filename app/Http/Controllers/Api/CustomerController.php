@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Customer;
 use App\Models\User;
+use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
@@ -74,6 +75,11 @@ class CustomerController extends Controller
             'password' => bcrypt('customer123'),
             'customer_id' => $customer->id,
         ]);
+        
+		$role = Role::where('name', '!=', 'Admin')->first();
+		if ($role) {
+			$user->syncRoles([$role->name]);
+		}
 
         return response()->json(['success' => true, 'message' => 'Data berhasil ditambahkan!']);
     }
