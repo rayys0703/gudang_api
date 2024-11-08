@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ProfileController extends Controller
 {
@@ -20,6 +22,7 @@ class ProfileController extends Controller
         $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Aturan validasi untuk foto
         ];
 
         if ($request->filled('password')) {
@@ -39,6 +42,27 @@ class ProfileController extends Controller
             $user->password = Hash::make($request->password);
         }
 
+        if ($user->customer_id) {
+            $customer = \App\Models\Customer::find($user->customer_id);
+            if ($customer) {
+                $customer->nama = $request->name;
+                $customer->save();
+            }
+        }
+
+        // Menangani upload foto
+        if ($request->hasFile('photo')) {
+            // Menghapus foto lama jika ada
+            if ($user->photo && file_exists(public_path('../public/photo/' . $user->photo))) {
+                unlink(public_path('../public/photo/' . $user->photo));
+            }
+
+            $file = $request->file('photo');
+            $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('../public/photo'), $filename); // Pindah ke gudang/public/photo
+            $user->photo = $filename;
+        }
+
         $user->save();
 
         return response()->json([
@@ -46,4 +70,5 @@ class ProfileController extends Controller
             'user' => $user,
         ]);
     }
+
 }
