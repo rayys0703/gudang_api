@@ -124,10 +124,10 @@ class BarangMasukController extends Controller
 			->leftJoin('status_barang', 'detail_barang_masuk.status_barang_id', '=', 'status_barang.id')
 
 			->select(
-				DB::raw('CASE 
-					WHEN serial_number.status = 1 THEN CONCAT(serial_number.serial_number, " (Released)")
-					ELSE serial_number.serial_number
-				END as serial_number'),
+				DB::raw("CASE 
+					WHEN serial_number.status = TRUE THEN serial_number.serial_number || ' (Released)'
+					ELSE serial_number.serial_number::text
+				END as serial_number"),
 				'status_barang.nama as status_barang',
 				'status_barang.warna as warna_status_barang',
 				'detail_barang_masuk.kelengkapan as kelengkapan_barang'
@@ -143,9 +143,6 @@ class BarangMasukController extends Controller
 
     	return response()->json($detail);
 	}
-
-
-
 	public function create($id = null)
 
 	{
