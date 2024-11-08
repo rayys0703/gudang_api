@@ -28,10 +28,11 @@ Route::post('login', [RegisterController::class, 'login']);
 Route::middleware(['jwt.verify'])->get('/user', [RegisterController::class, 'getUserData']);
 
 Route::get('/roles', [RoleController::class, 'index']);
+Route::get('/roles/create', [RoleController::class, 'create']);
 Route::post('/roles', [RoleController::class, 'store']);
-// Route::get('/roles/{id}', [RoleController::class, 'show']);
-Route::put('/roles/{id}', [RoleController::class, 'update']);
-Route::delete('/roles/{id}', [RoleController::class, 'destroy']);
+Route::get('/roles/{id}/edit', [RoleController::class, 'edit']);
+Route::put('/roles/{role}', [RoleController::class, 'update'])->name('roles.update');
+Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
 Route::get('/roles/assign', [RoleController::class, 'indexAssignRole']);
 Route::put('/roles/assign/{user}', [RoleController::class, 'assignRole'])->name('roles.assign');
 
