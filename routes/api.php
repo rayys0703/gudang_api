@@ -59,6 +59,7 @@ Route::middleware(['jwt.verify'])->group(function() {
     Route::get('/permintaanbarangkeluar/get-by-jenis/{id}', [PermintaanBarangKeluarController::class, 'getBarangByJenis']);
     Route::get('/permintaanbarangkeluar/get-by-barang/{id}', [PermintaanBarangKeluarController::class, 'getSerialNumberByBarang']);
     Route::post('/permintaanbarangkeluar/update-status', [PermintaanBarangKeluarController::class, 'updateStatus']);
+    Route::post('/permintaanbarangkeluar/insert-project-po', [PermintaanBarangKeluarController::class, 'insertProjectPO']);
     Route::put('/permintaanbarangkeluar/{id}', [PermintaanBarangKeluarController::class, 'update']);
     Route::delete('/permintaanbarangkeluar/{id}', [PermintaanBarangKeluarController::class, 'delete']);
     Route::get('/permintaanbarangkeluar/{id}', [PermintaanBarangKeluarController::class, 'show']); // direct

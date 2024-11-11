@@ -432,8 +432,6 @@ class PermintaanBarangKeluarController extends Controller
 			'id' => 'required|numeric',
 			'status' => 'required|string',
 			'reason' => 'nullable|string|max:150',
-			'project' => 'nullable|string|max:150',
-			'po' => 'nullable|string|max:150',
 		]);
 
 		$permintaan = PermintaanBarangKeluar::findOrFail($request->id);
@@ -465,23 +463,38 @@ class PermintaanBarangKeluarController extends Controller
 			}
 		}
 
-		if (in_array($permintaan->status, ['Approved'])) {
-			if ($request->status === 'InsertProjectPO') {
-				$permintaan->ba_project = $request->project ?? null;
-				$permintaan->ba_no_po = $request->po ?? null;				
-				$permintaan->save();
+		return response()->json([
+			'success' => false,
+			'message' => 'Request status cannot be changed because it has been approved or rejected',
+			'data' => $permintaan
+		]);
+	}
 
-				return response()->json([
-					'success' => true,
-					'message' => 'Request status successfully updated to InsertProjectPO',
-					'data' => $permintaan
-				]);
-			}
+	public function insertProjectPO(Request $request)
+	{
+		$request->validate([
+			'id' => 'required|numeric',
+			'project' => 'nullable|string|max:150',
+			'po' => 'nullable|string|max:150',
+		]);
+
+		$permintaan = PermintaanBarangKeluar::findOrFail($request->id);
+
+		if (in_array($permintaan->status, ['Approved'])) {
+			$permintaan->ba_project = $request->project ?? null;
+			$permintaan->ba_no_po = $request->po ?? null;				
+			$permintaan->save();
+
+			return response()->json([
+				'success' => true,
+				'message' => 'Successfully insert project and PO for BA',				
+				'data' => $permintaan
+			]);
 		}
 
 		return response()->json([
 			'success' => false,
-			'message' => 'Request status cannot be changed because it has been approved or rejected',
+			'message' => 'Failed to insert project and PO for BA',
 			'data' => $permintaan
 		]);
 	}
