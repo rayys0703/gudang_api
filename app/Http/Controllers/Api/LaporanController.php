@@ -103,7 +103,7 @@ class LaporanController extends Controller
             ->leftJoin('status_barang', 'detail_barang_masuk.status_barang_id', '=', 'status_barang.id')
             ->select('serial_number.serial_number', 'status_barang.nama as status_barang', 'status_barang.warna as warna_status_barang', 'detail_barang_masuk.kelengkapan')
             ->where('barang.id', $barangId)
-            ->where('serial_number.status', '!=', 1)
+            ->where('serial_number.status', '!=', TRUE)
             ->orderBy('serial_number.serial_number', 'asc')
             ->get();
 
@@ -151,14 +151,14 @@ class LaporanController extends Controller
 								->leftJoin('status_barang', 'detail_barang_masuk.status_barang_id', '=', 'status_barang.id')
 								->select(
                                     DB::raw('CASE 
-                                        WHEN serial_number.status = 1 THEN CONCAT(serial_number.serial_number, " (Released)")
-                                        ELSE serial_number.serial_number
+                                        WHEN serial_number.status = TRUE THEN serial_number.serial_number || \' (Released)\'
+					                    ELSE serial_number.serial_number::text
                                     END as serial_number'),
                                     'status_barang.nama as status_barang',
                                     'status_barang.warna as warna_status_barang',
                                     'detail_barang_masuk.kelengkapan as kelengkapan_barang'
-                                )
-								->where('detail_barang_masuk.barangmasuk_id', $item->barang_masuk_id)
+                                )								
+                                ->where('detail_barang_masuk.barangmasuk_id', $item->barang_masuk_id)
 								->orderBy('serial_number.serial_number', 'asc')
 								->get();
 						})
@@ -251,8 +251,8 @@ class LaporanController extends Controller
         // )
         ->select(
             DB::raw('CASE 
-                WHEN serial_number.status = 1 THEN CONCAT(serial_number.serial_number, " (Released)")
-                ELSE serial_number.serial_number
+                WHEN serial_number.status = TRUE THEN serial_number.serial_number || \' (Released)\'
+				ELSE serial_number.serial_number::text
             END as serial_number'),
             'status_barang.nama as status_barang',
             'status_barang.warna as warna_status_barang',
@@ -260,7 +260,7 @@ class LaporanController extends Controller
             'barang.nama as nama_barang', 
             'jenis_barang.nama as nama_jenis_barang', 
             'supplier.nama as nama_supplier'
-        )
+        )        
         ->where('detail_barang_masuk.barangmasuk_id', $barangmasuk_id)
         ->orderBy('serial_number.serial_number', 'asc')
         ->get();

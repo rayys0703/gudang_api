@@ -398,7 +398,7 @@ class PermintaanBarangKeluarController extends Controller
 				// }
 			}
 
-			return response()->json(['success' => true, 'message' => 'Berhasil membuat permintaan barang keluar!']);
+			return response()->json(['success' => true, 'message' => 'Successfully created item request!']);
 		} catch (\Exception $e) {
 			return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
 		}
@@ -436,9 +436,9 @@ class PermintaanBarangKeluarController extends Controller
 
 		$permintaan = PermintaanBarangKeluar::findOrFail($request->id);
 
-		if (in_array($permintaan->status, ['Belum Disetujui'])) {
+		if (in_array($permintaan->status, ['Pending'])) {
 
-			if ($request->status === 'Diproses') {
+			if ($request->status === 'Processing') {
 				/////////
 
 				$permintaan->status = $request->status;
@@ -446,18 +446,18 @@ class PermintaanBarangKeluarController extends Controller
 
 				return response()->json([
 					'success' => true,
-					'message' => 'Status permintaan berhasil diproses',
+					'message' => 'Request status successfully processed',
 					'data' => $permintaan
 				]);
 
-			} elseif ($request->status === 'Ditolak') {
+			} elseif ($request->status === 'Rejected') {
 				$permintaan->status = $request->status;
 				$permintaan->alasan = $request->reason;
 				$permintaan->save();
 
 				return response()->json([
 					'success' => true,
-					'message' => 'Status permintaan berhasil ditolak',
+					'message' => 'Request status successfully rejected',
 					'data' => $permintaan
 				]);
 			}
@@ -465,7 +465,7 @@ class PermintaanBarangKeluarController extends Controller
 
 		return response()->json([
 			'success' => false,
-			'message' => 'Status permintaan tidak dapat diubah karena sudah disetujui atau ditolak',
+			'message' => 'Request status cannot be changed because it has been approved or rejected',
 			'data' => $permintaan
 		]);
 	}
@@ -485,10 +485,10 @@ class PermintaanBarangKeluarController extends Controller
 
 		$permintaan = PermintaanBarangKeluar::findOrFail($id);
 
-		if ($permintaan->status === 'Disetujui' || $permintaan->status === 'Ditolak') {
+		if ($permintaan->status === 'Approved' || $permintaan->status === 'Rejected') {
 			return response()->json([
 				'success' => false,
-				'message' => 'Permintaan barang keluar sudah disetujui atau ditolak'
+				'message' => 'Request item has been approved or rejected'			
 			], 404);
 		}
 
@@ -611,9 +611,9 @@ class PermintaanBarangKeluarController extends Controller
 
 		DB::table('permintaan_barang_keluar')
 			->where('id', $permintaanBarang->id)
-			->update(['status' => 'Disetujui']);
+			->update(['status' => 'Approved']);
 
-		return response()->json(['success' => true, 'message' => 'Serial number berhasil disimpan dan barang berhasil dikeluarkan.'], 200);
+		return response()->json(['success' => true, 'message' => 'Serial numbers have been saved and items have been issued successfully.'], 200);
 	}
 
 }
