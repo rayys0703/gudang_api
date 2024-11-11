@@ -20,7 +20,7 @@ class RolePermissionSeeder extends Seeder
             'requirement type.view', 'requirement type.create', 'requirement type.edit', 'requirement type.delete',
             'incoming item.view', 'incoming item.create', 'incoming item.delete',
             'outbound item.view', 'outbound item.create', 'outbound item.delete',
-            'item request.viewFilterbyUser', 'item request.viewAll', 'item request.create', 'item request.confirm',
+            'item request.viewFilterbyUser', 'item request.viewAll', 'item request.create', 'item request.confirm', 'item request.generate BA',
             'report.view stock', 'report.export stock', 'report.view incoming item', 'report.export incoming item', 'report.view outbound item', 'report.export outbound item',
             'roles.view', 'roles.create', 'roles.edit', 'roles.delete',
         ];

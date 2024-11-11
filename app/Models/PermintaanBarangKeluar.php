@@ -21,5 +21,7 @@ class PermintaanBarangKeluar extends Model
         'alasan',
         'status',
         'created_by',
+        'ba_project',
+        'ba_no_po',
     ];
 }

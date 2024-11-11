@@ -134,7 +134,7 @@ class PermintaanBarangKeluarController extends Controller
 				'supplier.nama as nama_supplier',
 				DB::raw('SUM(detail_permintaan_bk.jumlah) as total_barang'),
 				//DB::raw('COUNT(detail_permintaan_bk.barang_id) as total_count')
-			)
+			)			
 			->where('detail_permintaan_bk.permintaan_barang_keluar_id', $id)
 			->groupBy('barang.id', 'barang.nama', 'jenis_barang.nama', 'supplier.nama')
 			->orderBy('barang.nama', 'asc')
@@ -432,6 +432,8 @@ class PermintaanBarangKeluarController extends Controller
 			'id' => 'required|numeric',
 			'status' => 'required|string',
 			'reason' => 'nullable|string|max:150',
+			'project' => 'nullable|string|max:150',
+			'po' => 'nullable|string|max:150',
 		]);
 
 		$permintaan = PermintaanBarangKeluar::findOrFail($request->id);
@@ -458,6 +460,20 @@ class PermintaanBarangKeluarController extends Controller
 				return response()->json([
 					'success' => true,
 					'message' => 'Request status successfully rejected',
+					'data' => $permintaan
+				]);
+			}
+		}
+
+		if (in_array($permintaan->status, ['Approved'])) {
+			if ($request->status === 'InsertProjectPO') {
+				$permintaan->ba_project = $request->project ?? null;
+				$permintaan->ba_no_po = $request->po ?? null;				
+				$permintaan->save();
+
+				return response()->json([
+					'success' => true,
+					'message' => 'Request status successfully updated to InsertProjectPO',
 					'data' => $permintaan
 				]);
 			}
