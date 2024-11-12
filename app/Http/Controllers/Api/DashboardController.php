@@ -6,7 +6,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-
+use Illuminate\Support\Facades\Auth;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Tymon\JWTAuth\Exceptions\TokenExpiredException;
+use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 
 class DashboardController extends Controller
 {
@@ -143,16 +147,22 @@ class DashboardController extends Controller
             'total_barang_masuk' => $total_barang_masuk,
             'total_barang_keluar' => $total_barang_keluar,
             'total_permintaan' => $total_permintaan,
-            'permintaan_ditolak' => DB::table('permintaan_barang_keluar')->where('status', 'Rejected')->count(),
-            'permintaan_diterima' => DB::table('permintaan_barang_keluar')->where('status', 'Approved')->count(),
-            'permintaan_pending' => DB::table('permintaan_barang_keluar')->where('status', 'Pending')->count(),
+            'req_rejected' => DB::table('permintaan_barang_keluar')->where('status', 'Rejected')->where('created_by', auth()->id())->count(),            
+            'req_approved' => DB::table('permintaan_barang_keluar')->where('status', 'Approved')->where('created_by', auth()->id())->count(),
+            'req_pending' => DB::table('permintaan_barang_keluar')->where('status', 'Pending')->where('created_by', auth()->id())->count(),
         ];
 
+        if ($request->user()->can('item request.viewAll')) {
+            $result['req_rejected'] = DB::table('permintaan_barang_keluar')->where('status', 'Rejected')->count();
+            $result['req_approved'] = DB::table('permintaan_barang_keluar')->where('status', 'Approved')->count();
+            $result['req_pending'] = DB::table('permintaan_barang_keluar')->where('status', 'Pending')->count();
+        }
+        
         // Mengirim data sebagai JSON
         return response()->json($result);
     }
 
-    public function getDailyActivity()
+    public function getDailyActivity(Request $request)
     {
         $activities = [];
 
@@ -210,6 +220,9 @@ class DashboardController extends Controller
             ->join('customer', 'permintaan_barang_keluar.customer_id', '=', 'customer.id')
             ->join('keperluan', 'permintaan_barang_keluar.keperluan_id', '=', 'keperluan.id')
             ->whereDate('permintaan_barang_keluar.created_at', today())
+            ->when(!$request->user()->can('item request.viewAll'), function($query) {
+                return $query->where('permintaan_barang_keluar.created_by', auth()->id());
+            })
             ->select('permintaan_barang_keluar.*', 'customer.nama as nama_customer', 'keperluan.nama as nama_keperluan')
             ->get()
             ->map(function ($item) {
@@ -219,7 +232,7 @@ class DashboardController extends Controller
                     'description' => $item->jumlah . ' Permintaan Barang untuk ' . $item->nama_customer . ' dengan keperluan ' . $item->nama_keperluan,
                 ];
             });
-
+            
         // Ambil barang masuk
         $barangMasuk = DB::table('serial_number')
             ->join('barang_masuk', 'serial_number.barangmasuk_id', '=', 'barang_masuk.id')

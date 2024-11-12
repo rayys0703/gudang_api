@@ -43,6 +43,9 @@ Route::put('/roles/assign/{user}', [RoleController::class, 'assignRole'])->name(
 // Route::middleware('auth:api')->get('me', [AuthController::class, 'me']);
 
 Route::middleware(['jwt.verify'])->group(function() {
+    Route::get('dashboard', [DashboardController::class, 'index']);
+    Route::get('/dashboard/daily-activity', [DashboardController::class, 'getDailyActivity']);
+
     Route::put('/user/update', [ProfileController::class, 'update']);
 
     Route::get('/barang/create', [BarangController::class, 'create']);
@@ -69,8 +72,6 @@ Route::middleware(['jwt.verify'])->group(function() {
 
     Route::get('/barang', [BarangController::class, 'index']);
 
-    Route::get('dashboard', [DashboardController::class, 'index']);
-    Route::get('/dashboard/daily-activity', [DashboardController::class, 'getDailyActivity']);
     Route::get('/suppliers', [SupplierController::class, 'index']);
     Route::post('/suppliers', [SupplierController::class, 'store']);
     Route::get('/suppliers/{id}', [SupplierController::class, 'edit']);
