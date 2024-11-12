@@ -89,6 +89,39 @@ class DashboardController extends Controller
             ->get()
             ->keyBy('date');
 
+        // Query untuk permintaan diterima 7 hari terakhir
+        $counts_req_rejected = DB::table('permintaan_barang_keluar')
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as count'))
+            ->where('status', 'Rejected')
+            ->where('created_by', auth()->id())
+            ->whereBetween('created_at', [Carbon::now()->subDays(6), Carbon::now()])
+            ->groupBy('date')
+            ->orderBy('date', 'DESC')
+            ->get()
+            ->keyBy('date');
+
+        // Query untuk permintaan disetujui 7 hari terakhir
+        $counts_req_approved = DB::table('permintaan_barang_keluar')
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as count'))
+            ->where('status', 'Approved')
+            ->where('created_by', auth()->id())
+            ->whereBetween('created_at', [Carbon::now()->subDays(6), Carbon::now()])
+            ->groupBy('date')
+            ->orderBy('date', 'DESC')
+            ->get()
+            ->keyBy('date');
+
+        // Query untuk permintaan pending 7 hari terakhir
+        $counts_req_pending = DB::table('permintaan_barang_keluar')
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as count'))
+            ->where('status', 'Pending')
+            ->where('created_by', auth()->id())
+            ->whereBetween('created_at', [Carbon::now()->subDays(6), Carbon::now()])
+            ->groupBy('date')
+            ->orderBy('date', 'DESC')
+            ->get()
+            ->keyBy('date');
+
         // Mendapatkan 6 bulan terakhir
         $months = collect();
         for ($i = 5; $i >= 0; $i--) {
@@ -135,6 +168,15 @@ class DashboardController extends Controller
             }),
             'counts_permintaan' => $dates->map(function ($date) use ($counts_permintaan) {
                 return $counts_permintaan->get($date)->count ?? 0;
+            }),
+            'counts_req_rejected' => $dates->map(function ($date) use ($counts_req_rejected) {
+                return $counts_req_rejected->get($date)->count ?? 0;
+            }),
+            'counts_req_approved' => $dates->map(function ($date) use ($counts_req_approved) {
+                return $counts_req_approved->get($date)->count ?? 0;
+            }),
+            'counts_req_pending' => $dates->map(function ($date) use ($counts_req_pending) {
+                return $counts_req_pending->get($date)->count ?? 0;
             }),
             'months' => $months,
             'counts_barang_masuk_6months' => $months->map(function ($month) use ($counts_barang_masuk_6months) {
