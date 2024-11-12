@@ -220,6 +220,9 @@ class DashboardController extends Controller
             ->join('jenis_barang', 'barang.jenis_barang_id', '=', 'jenis_barang.id')
             ->join('supplier', 'barang.supplier_id', '=', 'supplier.id')
             ->whereDate('permintaan_barang_keluar.updated_at', today())
+            ->when(!$request->user()->can('item request.viewAll'), function($query) {
+                return $query->where('permintaan_barang_keluar.created_by', auth()->id());
+            })
             ->select(
                 'serial_number.serial_number', 
                 'barang.nama as nama_barang', 
@@ -280,6 +283,9 @@ class DashboardController extends Controller
             ->join('barang_masuk', 'serial_number.barangmasuk_id', '=', 'barang_masuk.id')
             ->join('barang', 'barang_masuk.barang_id', '=', 'barang.id')
             ->whereDate('barang_masuk.created_at', today())
+            ->when(!$request->user()->can('item request.viewAll'), function($query) {
+                return $query->where('barang_masuk.created_by', auth()->id());
+            })
             ->select('barang_masuk.created_at as bm_created_at', 'barang.nama', 'serial_number.serial_number')
             ->get()
             ->groupBy(function ($item) {
@@ -313,6 +319,9 @@ class DashboardController extends Controller
         // Ambil data barang
         $dataBarang = DB::table('barang')
             ->whereDate('created_at', today())
+            ->when(!$request->user()->can('item request.viewAll'), function($query) {
+                return $query->whereDate('created_at', '>=', now()->subDays(10));
+            })
             ->get()
             ->map(function ($item) {
                 return [
