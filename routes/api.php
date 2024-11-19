@@ -157,6 +157,17 @@ Route::middleware(['jwt.verify'])->group(function() {
     //Route::get('/serialnumber/{id}', [SerialNumberController::class, 'cekByBarang']);
     Route::get('/serialnumber/{id}', [SerialNumberController::class, 'cekBySN']);
 
+
+
+
+
+
+
+
+
+
+
+    
 // Route::middleware('auth:sanctum')->post('logout', [AuthController::class, 'logout']);
 // Route::middleware('auth:sanctum')->get('user', [AuthController::class, 'user']);
 
