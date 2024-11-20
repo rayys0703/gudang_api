@@ -12,9 +12,6 @@ use Illuminate\Support\Str;
 
 class ProfileController extends Controller
 {
-    /**
-     * Memperbarui profil pengguna
-     */
     public function update(Request $request)
     {
         $user = Auth::user();
@@ -53,13 +50,13 @@ class ProfileController extends Controller
         // Menangani upload foto
         if ($request->hasFile('photo')) {
             // Menghapus foto lama jika ada
-            if ($user->photo && file_exists(public_path('../public/photo/' . $user->photo))) {
-                unlink(public_path('../public/photo/' . $user->photo));
+            if ($user->photo && file_exists(public_path('assets/photo_profile/' . $user->photo))) {
+                unlink(public_path('assets/photo_profile/' . $user->photo));
             }
 
             $file = $request->file('photo');
             $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('../public/photo'), $filename); // Pindah ke gudang/public/photo
+            $file->move(public_path('assets/photo_profile'), $filename); // Pindah ke public/assets/photo_profile
             $user->photo = $filename;
         }
 
@@ -69,6 +66,47 @@ class ProfileController extends Controller
             'message' => 'Profil berhasil diperbarui',
             'user' => $user,
         ]);
+    }
+
+    public function updatePhoto(Request $request)
+    {
+        $user = Auth::user();
+
+        // Log untuk debug
+        \Log::info('Memulai proses upload foto', ['user_id' => $user->id]);
+
+        $request->validate([
+            'photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        try {
+            // Log request file
+            if ($request->hasFile('photo')) {
+                \Log::info('File ditemukan', ['filename' => $request->file('photo')->getClientOriginalName()]);
+            } else {
+                \Log::warning('File tidak ditemukan di request.');
+            }
+
+            // Hapus foto lama jika ada
+            if ($user->photo && file_exists(public_path('assets/photo_profile/' . $user->photo))) {
+                \Log::info('Menghapus foto lama', ['old_photo' => $user->photo]);
+                unlink(public_path('assets/photo_profile/' . $user->photo));
+            }
+
+            // Simpan foto baru
+            $file = $request->file('photo');
+            $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('assets/photo_profile'), $filename);
+
+            $user->photo = $filename;
+            $user->save();
+
+            \Log::info('Foto berhasil diperbarui', ['new_photo' => $filename]);
+            return response()->json(['message' => 'Foto berhasil diperbarui', 'photo' => $filename]);
+        } catch (\Exception $e) {
+            \Log::error('Error saat mengunggah foto:', ['message' => $e->getMessage()]);
+            return response()->json(['message' => 'Gagal mengunggah foto.', 'error' => $e->getMessage()], 500);
+        }
     }
 
 }

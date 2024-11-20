@@ -51,6 +51,7 @@ Route::middleware(['jwt.verify'])->group(function() {
 
     /* User Management */
     Route::put('/user/update', [ProfileController::class, 'update']);
+    Route::post('/user/update-photo', [ProfileController::class, 'updatePhoto']);
 
     /* Barang */
     Route::get('/barang/create', [BarangController::class, 'create']);
