@@ -223,8 +223,8 @@ class DatabaseSeeder extends Seeder
             [
                 'barang_id' => 3,
                 'jumlah' => 5,
-                'tanggal' => $faker->dateTimeBetween('-6 days', 'now'),
-                'created_at' => $faker->dateTimeBetween('-7 days', 'now'),
+                'tanggal' => now()->subDays(30),
+                'created_at' => now()->subDays(30),            
             ],
         ];
 
