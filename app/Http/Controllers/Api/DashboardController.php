@@ -320,14 +320,22 @@ class DashboardController extends Controller
         $dataBarang = DB::table('barang')
             ->whereDate('created_at', today())
             ->when(!$request->user()->can('item request.viewAll'), function($query) {
-                return $query->whereDate('created_at', '>=', now()->subDays(10));
+                return $query->where('created_by', auth()->id());
             })
             ->get()
-            ->map(function ($item) {
+            ->groupBy(function ($item) {
+                return Carbon::parse($item->created_at)->format('Y-m-d');
+            })
+            ->map(function ($group) {
+                $barangList = [];
+                foreach ($group as $item) {
+                    $barangList[] = $item->nama;
+                }
+                
                 return [
-                    'time' => Carbon::parse($item->created_at)->format('H:i'),
+                    'time' => Carbon::parse($group->first()->created_at)->format('H:i'),
                     'badge_color' => 'bg-primary',
-                    'description' => '1 Data Barang: ' . $item->nama
+                    'description' => count($group) . ' Data Barang:' . "\n- " . implode("\n- ", $barangList)
                 ];
             });
 
@@ -347,7 +355,7 @@ class DashboardController extends Controller
             $description = $activity['description'];
 
             // Cek apakah ini adalah Data Barang
-            if (strpos($description, '1 Data Barang:') !== false) {
+            if (strpos($description, '100 Data Barang:') !== false) {
                 $barangName = str_replace('1 Data Barang: ', '', $description);
                 $key = $time . '-Data Barang';
                 if (isset($groupedActivities[$key])) {
