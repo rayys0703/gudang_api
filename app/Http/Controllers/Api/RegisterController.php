@@ -43,7 +43,10 @@ class RegisterController extends Controller
         $credentials = $request->only('email', 'password');
 
         if (!$token = JWTAuth::attempt($credentials)) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+            if (!User::where('email', $request->email)->exists()) {
+                return response()->json(['error' => 'Email not found'], 404);
+            }
+            return response()->json(['error' => 'Invalid password'], 401);
         }
 
         return response()->json([
